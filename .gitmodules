@@ -1,0 +1,15 @@
+[submodule "Assets/Modules"]
+	path = Assets/Modules
+	url = https://github.com/TonyChenn/N-ConvertTable.git
+[submodule "Assets/Modules/N-ConvertTable"]
+	path = Assets/Modules/N-ConvertTable
+	url = https://github.com/TonyChenn/N-ConvertTable.git
+[submodule "Assets/Modules/N-Core"]
+	path = Assets/Modules/N-Core
+	url = https://github.com/TonyChenn/N-Core.git
+[submodule "Assets/Modules/N-Package"]
+	path = Assets/Modules/N-Package
+	url = https://github.com/TonyChenn/N-Package.git
+[submodule "Assets/Modules/N-ResKit"]
+	path = Assets/Modules/N-ResKit
+	url = https://github.com/TonyChenn/N-ResKit.git

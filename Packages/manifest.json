@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "com.focus-creative-games.hybridclr_unity": "0.8.0",
+    "com.focus-creative-games.hybridclr_unity": "1.0.0",
     "com.unity.2d.pixel-perfect": "4.0.1",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.2d.spriteshape": "5.3.0",

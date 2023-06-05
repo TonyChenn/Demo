@@ -45,11 +45,16 @@ public class Version : NormalSingleton<Version>
     public async void CheckUpdate()
     {
         Messenger<UpdateState, int>.Broadcast(MessengerDef.CHECK_UPDATE, UpdateState.GetRemoteVersion, 0);
-        string localVersion = Singleton.GetLocalVersion();
+        int[] localVersion = Singleton.GetLocalVersion();
+        int localBig = localVersion[0];
+        int localMid = localVersion[1];
+        int localSmall = localVersion[2];
+        string str_local_version = $"{localBig}.{localMid}.{localSmall}";
+
         await Task.Delay(100);
         Messenger<UpdateState, int>.Broadcast(MessengerDef.CHECK_UPDATE, UpdateState.GetRemoteVersion, 10);
-        Messenger<string>.Broadcast(MessengerDef.REFRESH_LOCAL_VERSION, localVersion);
-        Log.Info("[01] 获取本地版本号：{localVersion}");
+        Messenger<string>.Broadcast(MessengerDef.REFRESH_LOCAL_VERSION, str_local_version);
+        Log.Info($"[01] 获取本地版本号：{localVersion}");
 
         if (GameConfig.Singlton.PlayMode == PlayMode.OfflineMode)
         {
@@ -67,12 +72,27 @@ public class Version : NormalSingleton<Version>
             Messenger<UpdateState, int>.Broadcast(MessengerDef.CHECK_UPDATE, UpdateState.GetRemoteVersionFail, 20);
             return;
         }
-        var remoteVersion = remoteVersionReq.GetJsonNode()["version"];
+        int remoteBig, remoteMid, remoteSmall = 0;
+        using (BinaryReader reader = new BinaryReader(new MemoryStream(remoteVersionReq.GetBytes())))
+        {
+            remoteBig = reader.ReadInt32();
+            remoteMid = reader.ReadInt32();
+            remoteSmall = reader.ReadInt32();
+        }
+        string str_remote_version = $"{remoteBig}.{remoteMid}.{remoteSmall}";
         await Task.Delay(100);
-        Messenger<string>.Broadcast(MessengerDef.REFRESH_REMOTE_VERSION, remoteVersion);
+        Messenger<string>.Broadcast(MessengerDef.REFRESH_REMOTE_VERSION, str_remote_version);
         Messenger<UpdateState, int>.Broadcast(MessengerDef.CHECK_UPDATE, UpdateState.GetRemoteVersion, 20);
-        Log.Info($"[02] 获取远程版本号：{remoteVersion}");
-        if (localVersion == remoteVersion && !NeedFixClient)
+        Log.Info($"[02] 获取远程版本号：{str_remote_version}");
+
+        // 强更，需要更新安装包
+        if(localBig < remoteBig)
+        {
+            Log.Info("[02] 请下载最新安装包");
+            return;
+        }
+
+        if (localSmall == remoteSmall && !NeedFixClient)
         {
             DeleteTmpDownloadFolder();
             Log.Info("[02] 版本号一致新进入游戏: 100%");
@@ -145,7 +165,6 @@ public class Version : NormalSingleton<Version>
         }
 
         // 下载
-        //DownloadUpdate(modifyList, delList);
         DownloadUpdateBundleAsync(modifyList, delList, downloadSize);
         NeedFixClient = false;
     }
@@ -153,12 +172,17 @@ public class Version : NormalSingleton<Version>
 
 
     #region 获取远程、本地版本号
-    private string GetLocalVersion()
+    private int[] GetLocalVersion()
     {
-        string json = File.ReadAllText(PathUtil.GetBundleFullPath(VERSIONFILENAME));
-        JSONNode node = JSON.Parse(json);
-
-        return node["version"];
+        int[] version = new int[3];
+        string path = PathUtil.GetBundleFullPath(VERSIONFILENAME);
+        using(BinaryReader reader = new BinaryReader(File.Open(path, FileMode.Open)))
+        {
+            version[0] = reader.ReadInt32();
+            version[1] = reader.ReadInt32();
+            version[2] = reader.ReadInt32();
+        }
+        return version;
     }
     private async Task<UnityWebRequest> GetRemoteVersion()
     {
@@ -298,6 +322,8 @@ public class Version : NormalSingleton<Version>
     /// <param name="modifyList"></param>
     private void DownloadUpdateBundleAsync(List<string[]> modifyList, List<string[]> deleteList, ulong downloadSize)
     {
+        Downloader.Singleton.ClearAllDownload();
+
         ulong curDownloadSize = 0;
         Dictionary<string, ulong> downloadFileSizeDict = new Dictionary<string, ulong>(modifyList.Count);
         bool needRestartClient = false;
@@ -321,6 +347,7 @@ public class Version : NormalSingleton<Version>
 
             unit.ErrorFun = (msg) =>
             {
+                Downloader.Singleton.DeleteDownload(unit);
                 Log.Error($"多次下载失败：{unit.Name}\n {msg}");
             };
             unit.ProgressFun = (curSize, totalSize) =>
@@ -397,8 +424,8 @@ public class Version : NormalSingleton<Version>
         {
             File.Copy(TmpVersionFilePath, PathUtil.GetAssetBundlePersistPath(VERSIONFILENAME), true);
 
-            var version = GetLocalVersion();
-            Messenger<string>.Broadcast(MessengerDef.REFRESH_LOCAL_VERSION, version);
+            int[] v = GetLocalVersion();
+            Messenger<string>.Broadcast(MessengerDef.REFRESH_LOCAL_VERSION, $"{v[0]}.{v[1]}.{v[2]}");
         }
         catch (Exception ex)
         {

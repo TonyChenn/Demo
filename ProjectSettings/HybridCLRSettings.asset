@@ -20,14 +20,14 @@ MonoBehaviour:
   hotUpdateAssemblies:
   - Assembly-CSharp
   preserveHotUpdateAssemblies: []
-  hotUpdateDllCompileOutputRootDir: /../HybridCLRData/HotUpdateDlls
+  hotUpdateDllCompileOutputRootDir: HybridCLRData/HotUpdateDlls
   externalHotUpdateAssembliyDirs: []
-  strippedAOTDllOutputRootDir: /../HybridCLRData/AssembliesPostIl2CppStrip
+  strippedAOTDllOutputRootDir: HybridCLRData/AssembliesPostIl2CppStrip
   patchAOTAssemblies:
   - mscorlib
   - System
   - System.Core
-  outputLinkFile: Third/HybridCLR/Generated/link.xml
-  outputAOTGenericReferenceFile: Third/HybridCLR/Generated/AOTGenericReferences.cs
+  outputLinkFile: Third/HybridCLRData/Generated/link.xml
+  outputAOTGenericReferenceFile: Third/HybridCLRData/Generated/AOTGenericReferences.cs
   maxGenericReferenceIteration: 4
   maxMethodBridgeGenericIteration: 4

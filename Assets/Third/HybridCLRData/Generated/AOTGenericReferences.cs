@@ -1,13 +1,17 @@
+using System.Collections.Generic;
 public class AOTGenericReferences : UnityEngine.MonoBehaviour
 {
 
 	// {{ AOT assemblies
-	// N-Core.dll
-	// System.Core.dll
-	// UnityEngine.AndroidJNIModule.dll
-	// UnityEngine.AssetBundleModule.dll
-	// UnityEngine.CoreModule.dll
-	// mscorlib.dll
+	public static readonly IReadOnlyList<string> PatchedAOTAssemblyList = new List<string>
+	{
+		"N-Core.dll",
+		"System.Core.dll",
+		"UnityEngine.AndroidJNIModule.dll",
+		"UnityEngine.AssetBundleModule.dll",
+		"UnityEngine.CoreModule.dll",
+		"mscorlib.dll",
+	};
 	// }}
 
 	// {{ constraint implement type
@@ -32,25 +36,25 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	// System.Collections.Generic.IEnumerable<object>
 	// System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<int,object>>
 	// System.Collections.Generic.IEnumerator<object>
-	// System.Collections.Generic.KeyValuePair<object,object>
 	// System.Collections.Generic.KeyValuePair<int,object>
-	// System.Collections.Generic.List<float>
-	// System.Collections.Generic.List<UnityEngine.Color>
+	// System.Collections.Generic.KeyValuePair<object,object>
 	// System.Collections.Generic.List<UIFlag>
 	// System.Collections.Generic.List<RenderHeads.Media.AVProVideo.MediaPlayer.PlatformOptions.HTTPHeader>
+	// System.Collections.Generic.List<object>
+	// System.Collections.Generic.List<UnityEngine.Color>
+	// System.Collections.Generic.List<float>
+	// System.Collections.Generic.List<RenderHeads.Media.AVProVideo.Stream.Chunk>
 	// System.Collections.Generic.List<int>
 	// System.Collections.Generic.List<UnityEngine.UIVertex>
-	// System.Collections.Generic.List<RenderHeads.Media.AVProVideo.Stream.Chunk>
-	// System.Collections.Generic.List<object>
 	// System.Collections.Generic.List.Enumerator<object>
 	// System.Func<int,object>
 	// System.Func<float,float>
-	// System.Runtime.CompilerServices.AsyncTaskMethodBuilder<byte>
 	// System.Runtime.CompilerServices.AsyncTaskMethodBuilder<object>
-	// System.Runtime.CompilerServices.TaskAwaiter<byte>
+	// System.Runtime.CompilerServices.AsyncTaskMethodBuilder<byte>
 	// System.Runtime.CompilerServices.TaskAwaiter<object>
-	// System.Threading.Tasks.Task<object>
+	// System.Runtime.CompilerServices.TaskAwaiter<byte>
 	// System.Threading.Tasks.Task<byte>
+	// System.Threading.Tasks.Task<object>
 	// UnityEngine.Events.UnityAction<byte>
 	// UnityEngine.Events.UnityAction<object,RenderHeads.Media.AVProVideo.MediaPlayerEvent.EventType,RenderHeads.Media.AVProVideo.ErrorCode>
 	// UnityEngine.Events.UnityEvent<byte>

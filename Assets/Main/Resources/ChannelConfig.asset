@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c5b97ed653084b7dbfe1c42c74c29fbc, type: 3}
+  m_Name: ChannelConfig
+  m_EditorClassIdentifier: 
+  ChannelList:
+  - curAssetURL: 
+    ChannelType: 0
+    ServerURL: http://localhost
+    AssetURL1: http://localhost:80/StandaloneWindows64
+    AssetURL2: http://localhost:80/StandaloneWindows64
+    ShareEnable: 1
+  - curAssetURL: 
+    ChannelType: 1
+    ServerURL: http://localhost
+    AssetURL1: http://localhost:80/Android
+    AssetURL2: http://localhost:80/Android
+    ShareEnable: 1
+  - curAssetURL: 
+    ChannelType: 2
+    ServerURL: http://localhost
+    AssetURL1: http://localhost:80/iOS
+    AssetURL2: http://localhost:80/iOS
+    ShareEnable: 1

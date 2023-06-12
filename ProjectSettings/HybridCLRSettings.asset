@@ -29,5 +29,5 @@ MonoBehaviour:
   - System.Core
   outputLinkFile: Third/HybridCLRData/Generated/link.xml
   outputAOTGenericReferenceFile: Third/HybridCLRData/Generated/AOTGenericReferences.cs
-  maxGenericReferenceIteration: 4
-  maxMethodBridgeGenericIteration: 4
+  maxGenericReferenceIteration: 10
+  maxMethodBridgeGenericIteration: 10

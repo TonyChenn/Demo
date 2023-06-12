@@ -81,9 +81,6 @@
     <type fullname="System.RuntimeFieldHandle" preserve="all" />
     <type fullname="System.RuntimeTypeHandle" preserve="all" />
     <type fullname="System.Security.Cryptography.X509Certificates.X509Certificate" preserve="all" />
-    <type fullname="System.Security.Permissions.SecurityAction" preserve="all" />
-    <type fullname="System.Security.Permissions.SecurityPermissionAttribute" preserve="all" />
-    <type fullname="System.Security.UnverifiableCodeAttribute" preserve="all" />
     <type fullname="System.Single" preserve="all" />
     <type fullname="System.String" preserve="all" />
     <type fullname="System.StringSplitOptions" preserve="all" />
@@ -200,6 +197,7 @@
     <type fullname="UnityEngine.HideFlags" preserve="all" />
     <type fullname="UnityEngine.HideInInspector" preserve="all" />
     <type fullname="UnityEngine.ISerializationCallbackReceiver" preserve="all" />
+    <type fullname="UnityEngine.KeyCode" preserve="all" />
     <type fullname="UnityEngine.Keyframe" preserve="all" />
     <type fullname="UnityEngine.Light" preserve="all" />
     <type fullname="UnityEngine.Material" preserve="all" />
@@ -262,6 +260,13 @@
     <type fullname="UnityEngine.GUIUtility" preserve="all" />
     <type fullname="UnityEngine.ScaleMode" preserve="all" />
   </assembly>
+  <assembly fullname="UnityEngine.InputLegacyModule">
+    <type fullname="UnityEngine.Input" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.PhysicsModule">
+    <type fullname="UnityEngine.CharacterController" preserve="all" />
+    <type fullname="UnityEngine.CollisionFlags" preserve="all" />
+  </assembly>
   <assembly fullname="UnityEngine.TextRenderingModule">
     <type fullname="UnityEngine.UIVertex" preserve="all" />
   </assembly>
@@ -286,11 +291,16 @@
   </assembly>
   <assembly fullname="UnityEngine.UIModule">
     <type fullname="UnityEngine.Canvas" preserve="all" />
+    <type fullname="UnityEngine.CanvasRenderer" preserve="all" />
   </assembly>
   <assembly fullname="UnityEngine.UnityWebRequestModule">
     <type fullname="UnityEngine.Networking.DownloadHandler" preserve="all" />
     <type fullname="UnityEngine.Networking.UnityWebRequest" preserve="all" />
     <type fullname="UnityEngine.Networking.UnityWebRequest/Result" preserve="all" />
     <type fullname="UnityEngine.Networking.UnityWebRequestAsyncOperation" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.UnityWebRequestTextureModule">
+    <type fullname="UnityEngine.Networking.DownloadHandlerTexture" preserve="all" />
+    <type fullname="UnityEngine.Networking.UnityWebRequestTexture" preserve="all" />
   </assembly>
 </linker>

@@ -109,9 +109,7 @@ public static class Version
 		if (localBig < remoteBig)
 		{
 			Log.Info("[02] 请下载最新安装包");
-			UI_Update.ShowDialog("检测到最新安装包,请到应用商店进行下载",
-								 () => { Application.OpenURL("https://blog.tonychenn.cn"); },
-								 () => { Application.OpenURL("https://blog.tonychenn.cn"); });
+			UI_Update.ShowDialog("检测到最新安装包,请到应用商店进行下载", () => { Application.OpenURL("https://blog.tonychenn.cn"); });
 			return;
 		}
 
@@ -199,7 +197,7 @@ public static class Version
 			return;
 		}
 
-		string _content = string.Format("检测到更新{0}", GetByteLengthString(downloadSize));
+		string _content = string.Format("检测到更新{0},是否使用流量进行下载", GetByteLengthString(downloadSize));
 		UI_Update.ShowDialog(_content,
 							() => { DownloadUpdateBundleAsync(modifyList, delList, downloadSize); NeedFixClient = false; },
 							() => Application.Quit());
@@ -366,8 +364,9 @@ public static class Version
 			SaveVersionFile();
 			refreshProgressValueAction(UpdateState.Download, 100);
 
-			Log.Info("[10] 更新完成，重新启动游戏客户端");
-			UI_Update.ShowDialog("更新已完成，请重启客户端", () => Application.Quit(), () => Application.Quit());
+			Log.Info("[10] 更新完成，进入游戏(无需重启)");
+			UI_Update.ShowDialog("更新已完成");
+			CSharpLoader.LoadDLL();
 		});
 	}
 

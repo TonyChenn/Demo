@@ -1,29 +1,26 @@
 using HybridCLR;
-using NDebug;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-/// <summary>
-/// AOT 无法热更
-/// </summary>
-public class Boot : MonoBehaviour
+public class CSharpLoader
 {
-	void Start()
+	public static void LoadDLL()
 	{
-		LoadDLL();
-	}
-
-	void LoadDLL()
-	{
+		Debug.Log("----------------------------------------------------------");
+		Debug.Log("-> 开始加载C# DLL");
 		Assembly assembly = null;
 #if UNITY_EDITOR
+		Debug.Log("--> 编辑器模式，无需加载DLL");
 		assembly = System.AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetName().Name == "Assembly-CSharp");
 #else
+		Debug.Log("--> 真机模式，需要加载DLL");
 		LoadAOTDlls();
 		LoadHotfixDlls(ref assembly);
 #endif
+		Debug.Log("-> C# DLL 加载完毕");
+		Debug.Log("----------------------------------------------------------");
 		System.Type gameMgr = assembly.GetType("GameMgr");
 		GameObject.Find("[Main]").AddComponent(gameMgr);
 	}
@@ -37,20 +34,21 @@ public class Boot : MonoBehaviour
 	/// </summary>
 	private static void LoadAOTDlls()
 	{
-		Log.Info("开始补充元数据");
+		Debug.Log("---> 开始补充元数据");
 		var aotDlls = Resources.LoadAll<TextAsset>("AotDll");
 		foreach (var dll in aotDlls)
 		{
 			LoadImageErrorCode err = RuntimeApi.LoadMetadataForAOTAssembly(dll.bytes, HomologousImageMode.SuperSet);
-			Log.Info($"补充元数据：{dll.name}, ret: {err == LoadImageErrorCode.OK}");
+			Debug.Log($"---->补充元数据：{dll.name}, ret: {err == LoadImageErrorCode.OK}");
 		}
+		Debug.Log("---> 补充元数据完毕");
 	}
 
 	private static void LoadHotfixDlls(ref Assembly assembly)
 	{
-		Log.Info("开始加载热更程序集");
+		Debug.Log("---> 开始加载热更程序集");
 		string hotfixDll = Application.persistentDataPath + "/code/code.u";
-		if(!File.Exists(hotfixDll) || GameConfig.PlayMode == PlayMode.OfflineMode)
+		if (!File.Exists(hotfixDll) || GameConfig.PlayMode == PlayMode.OfflineMode)
 		{
 			hotfixDll = Application.streamingAssetsPath + "/code/code.u";
 		}
@@ -58,7 +56,8 @@ public class Boot : MonoBehaviour
 		AssetBundle bundle = AssetBundle.LoadFromFile(hotfixDll);
 		TextAsset dll = bundle.LoadAsset<TextAsset>("Assembly-CSharp.bytes");
 		assembly = Assembly.Load(dll.bytes);
-		Log.Info($"热更程序集记载完毕: {dll != null}");
+		Debug.Log($"----> 加载热更程序集记 Assembly-CSharp.bytes 完毕: {dll != null}");
 		bundle.Unload(true);
+		Debug.Log("---> 热更程序集加载完毕");
 	}
 }

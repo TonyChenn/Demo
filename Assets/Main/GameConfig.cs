@@ -12,7 +12,6 @@ public class GameConfig : MonoBehaviour
 
 
 	private static GameConfig _instance = null;
-	private Boot boot = null;
 
 
 	public static GameConfig Singlton { get { return _instance; } }
@@ -56,17 +55,6 @@ public class GameConfig : MonoBehaviour
 
 		Log.Info("当前渠道：" + channel);
 		Log.Info("运行模式：" + playMode);
-
-		//if (openSDK)
-		//{
-		//	// 加载热更程序集
-		//	boot = GetComponent<Boot>();
-		//}
-		//else
-		//{
-		//	// 加载热更程序集
-		//	boot = GetComponent<Boot>();
-		//}
 
 		yield return StartHotUpdate();
 	}

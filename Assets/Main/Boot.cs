@@ -1,26 +1,15 @@
 using HybridCLR;
-using System.Collections.Generic;
+using NDebug;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using UnityEngine;
-
 
 /// <summary>
 /// AOT 无法热更
 /// </summary>
 public class Boot : MonoBehaviour
 {
-	private void Awake()
-	{
-		//Debug.Log($"资源系统运行模式：{playMode}");
-		Application.targetFrameRate = 60;
-		Application.runInBackground = true;
-		Screen.sleepTimeout = SleepTimeout.NeverSleep;
-
-		DontDestroyOnLoad(this);
-	}
 	void Start()
 	{
 		LoadDLL();
@@ -32,57 +21,44 @@ public class Boot : MonoBehaviour
 #if UNITY_EDITOR
 		assembly = System.AppDomain.CurrentDomain.GetAssemblies().First(a => a.GetName().Name == "Assembly-CSharp");
 #else
-		LoadMetadataForAOTAssemblies();
-		byte[] dllBytes = LoadDllBytes("dll/assembly-csharp.u");
-		byte[] pdbBytes = LoadDllBytes("dll/assembly-csharp.pdb");
-		assembly = Assembly.Load(dllBytes, pdbBytes);
+		LoadAOTDlls();
+		LoadHotfixDlls(ref assembly);
 #endif
-		System.Type gameMgr = assembly.GetType("HotUpdateMain");
-		gameMgr.GetMethod("Start").Invoke(null, null);
+		System.Type gameMgr = assembly.GetType("GameMgr");
+		GameObject.Find("[Main]").AddComponent(gameMgr);
 	}
 
 	/// <summary>
 	/// 为aot assembly加载原始metadata， 这个代码放aot或者热更新都行。
 	/// 一旦加载后，如果AOT泛型函数对应native实现不存在，则自动替换为解释模式执行
+	/// 
+	/// 注意，补充元数据是给AOT dll补充元数据，而不是给热更新dll补充元数据。
+	/// 热更新dll不缺元数据，不需要补充，如果调用LoadMetadataForAOTAssembly会返回错误
 	/// </summary>
-	private static void LoadMetadataForAOTAssemblies()
+	private static void LoadAOTDlls()
 	{
-		// AOT 补充元数据
-		List<string> aotMetaAssemblyFiles = new List<string>()
+		Log.Info("开始补充元数据");
+		var aotDlls = Resources.LoadAll<TextAsset>("AotDll");
+		foreach (var dll in aotDlls)
 		{
-			"mscorlib",
-			"System",
-			"System.Core",
-		};
-		/// 注意，补充元数据是给AOT dll补充元数据，而不是给热更新dll补充元数据。
-		/// 热更新dll不缺元数据，不需要补充，如果调用LoadMetadataForAOTAssembly会返回错误
-		/// 
-		HomologousImageMode mode = HomologousImageMode.SuperSet;
-		foreach (var aotDllName in aotMetaAssemblyFiles)
-		{
-			byte[] dllBytes = LoadDllBytes($"dll/{aotDllName}.u");
-			// 加载assembly对应的dll，会自动为它hook。一旦aot泛型函数的native函数不存在，用解释器版本代码
-			LoadImageErrorCode err = RuntimeApi.LoadMetadataForAOTAssembly(dllBytes, mode);
-			Debug.Log($"LoadMetadataForAOTAssembly:{aotDllName}. mode:{mode} ret:{err}");
+			LoadImageErrorCode err = RuntimeApi.LoadMetadataForAOTAssembly(dll.bytes, HomologousImageMode.SuperSet);
+			Log.Info($"补充元数据：{dll.name}, ret: {err == LoadImageErrorCode.OK}");
 		}
 	}
-	private static byte[] LoadDllBytes(string dllName)
+
+	private static void LoadHotfixDlls(ref Assembly assembly)
 	{
-		StringBuilder builder = new StringBuilder();
-		if (GameConfig.PlayMode == PlayMode.HostMode)
+		Log.Info("开始加载热更程序集");
+		string hotfixDll = Application.persistentDataPath + "/code/code.u";
+		if(!File.Exists(hotfixDll) || GameConfig.PlayMode == PlayMode.OfflineMode)
 		{
-			builder.Append(Application.persistentDataPath);
-			builder.Append('/');
-			builder.Append(dllName);
-			if (File.Exists(builder.ToString()))
-			{
-				return File.ReadAllBytes(builder.ToString());
-			}
+			hotfixDll = Application.streamingAssetsPath + "/code/code.u";
 		}
-		builder.Clear();
-		builder.Append(Application.streamingAssetsPath);
-		builder.Append('/');
-		builder.Append(dllName);
-		return File.ReadAllBytes(builder.ToString());
+
+		AssetBundle bundle = AssetBundle.LoadFromFile(hotfixDll);
+		TextAsset dll = bundle.LoadAsset<TextAsset>("Assembly-CSharp.bytes");
+		assembly = Assembly.Load(dll.bytes);
+		Log.Info($"热更程序集记载完毕: {dll != null}");
+		bundle.Unload(true);
 	}
 }

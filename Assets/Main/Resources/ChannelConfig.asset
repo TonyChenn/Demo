@@ -13,21 +13,18 @@ MonoBehaviour:
   m_Name: ChannelConfig
   m_EditorClassIdentifier: 
   ChannelList:
-  - curAssetURL: 
-    ChannelType: 0
+  - ChannelType: 0
     ServerURL: http://localhost
-    AssetURL1: http://localhost:80/StandaloneWindows64
-    AssetURL2: http://localhost:80/StandaloneWindows64
+    AssetURL1: http://172.20.22.24/StandaloneWindows64
+    AssetURL2: http://172.20.22.24/StandaloneWindows64
     ShareEnable: 1
-  - curAssetURL: 
-    ChannelType: 1
+  - ChannelType: 1
     ServerURL: http://localhost
-    AssetURL1: http://localhost:80/Android
-    AssetURL2: http://localhost:80/Android
+    AssetURL1: http://172.20.22.24/Android
+    AssetURL2: http://172.20.22.24/Android
     ShareEnable: 1
-  - curAssetURL: 
-    ChannelType: 2
+  - ChannelType: 2
     ServerURL: http://localhost
-    AssetURL1: http://localhost:80/iOS
-    AssetURL2: http://localhost:80/iOS
+    AssetURL1: http://172.20.22.24/iOS
+    AssetURL2: http://172.20.22.24/iOS
     ShareEnable: 1

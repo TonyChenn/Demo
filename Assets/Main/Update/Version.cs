@@ -85,12 +85,18 @@ public static class Version
 		var remoteVersionReq = await GetRemoteVersion();
 		if (remoteVersionReq == null)
 		{
-			Log.Error("[02] 获取远程版本失败");
 			UI_Update.ShowDialog("获取远程版本失败,请重新尝试", async () =>
 			{
 				await CheckUpdate(refreshLocalVersionAction, refreshRemoteVersionAction, refreshProgressValueAction);
 			},
-			() => Application.Quit());
+			() =>
+			{
+#if UNITY_EDITOR
+				UnityEditor.EditorApplication.isPlaying = false;
+#else
+				Application.Quit();
+#endif
+			});
 			refreshProgressValueAction(UpdateState.GetRemoteVersionFail, 20);
 			return;
 		}
@@ -114,12 +120,12 @@ public static class Version
 		}
 
 #if UNITY_IOS  // Apple提审中              
-		string versionName = NSDK.GetVersionName();
+		string versionName = Application.version;
 		if (versionName == remoteVersionInfo.appleExamVersion)
 		{
 			Log.Info("[02] iOS提审模式，无需更新，进入游戏");
-			Messenger<string>.Broadcast(MessengerDef.REFRESH_REMOTE_VERSION, "apple exam");
-			Messenger<UpdateState, int>.Broadcast(MessengerDef.CHECK_UPDATE, UpdateState.CanEnterGame, 100);
+			refreshRemoteVersionAction("apple exam");
+			refreshProgressValueAction(UpdateState.CanEnterGame, 100);
 			return;
 		}
 #endif
@@ -144,8 +150,20 @@ public static class Version
 		});
 		if (!success)
 		{
-			Log.Error("[03] 获取远程资源列表失败: 50%");
 			refreshProgressValueAction(UpdateState.GetRemoteResFail, 50);
+
+			UI_Update.ShowDialog("获取远程资源清单失败,请重新尝试", async () =>
+			{
+				await CheckUpdate(refreshLocalVersionAction, refreshRemoteVersionAction, refreshProgressValueAction);
+			},
+			() =>
+			{
+#if UNITY_EDITOR
+				UnityEditor.EditorApplication.isPlaying = false;
+#else
+				Application.Quit();
+#endif
+			});
 			return;
 		}
 		// 版本号变更, 资源无变化
@@ -216,10 +234,15 @@ public static class Version
 	private static async Task<UnityWebRequest> GetRemoteVersion()
 	{
 		string remoteUrl = PathUtil.GetBundleCDNUrl(VERSIONFILENAME, true);
+		Debug.Log($"[UnityWebRequest] >>> <color=green>{remoteUrl}</color>");
 		UnityWebRequest request = UnityWebRequest.Get($"{remoteUrl}?{DateTime.Now}");
 		request.SendWebRequest();
-		while (!request.isDone) { await Task.Delay(1); }
-		if (request.error != null) { return null; }
+		while (!request.isDone) { await Task.Delay(0); }
+		if (request.error != null)
+		{
+			Debug.Log($"[UnityWebRequest] <<< <color=red>{request.error}</color>");
+			return null;
+		}
 
 		if (request.result == UnityWebRequest.Result.Success)
 		{
@@ -227,9 +250,14 @@ public static class Version
 			var fs = new FileStream(TmpVersionFilePath, FileMode.Create);
 			await fs.WriteAsync(data, 0, data.Length);
 			fs.Close();
+			Debug.Log("[UnityWebRequest] <<< <color=green>success</color>");
 			return request;
 		}
-		return null;
+		else
+		{
+			Debug.Log($"[UnityWebRequest] <<< <color=red>{request.result.ToString()}</color>");
+			return null;
+		}
 	}
 	#endregion
 
@@ -244,6 +272,7 @@ public static class Version
 	}
 	private static async Task<bool> DownloaRemoteMD5FileHandler(string url, Action<float> refreshAction)
 	{
+		Debug.Log($"[UnityWebRequest] >>> <color=green>{url}</color>");
 		UnityWebRequest request = UnityWebRequest.Get(url);
 		request.SendWebRequest();
 
@@ -252,14 +281,22 @@ public static class Version
 			refreshAction?.Invoke(request.downloadProgress);
 			await Task.Delay(0);
 		}
+		if (request.error != null)
+		{
+			Debug.Log($"[UnityWebRequest] <<< <color=red>{request.error}</color>");
+			return false;
+		}
 		if (request.result == UnityWebRequest.Result.Success)
 		{
 			byte[] data = request.downloadHandler.data;
 			var fs = new FileStream(TmpMD5FilePath, FileMode.Create);
 			await fs.WriteAsync(data, 0, data.Length);
 			fs.Close();
+
+			Debug.Log("[UnityWebRequest] <<< <color=green>success</color>");
 			return true;
 		}
+		Debug.Log($"[UnityWebRequest] <<< <color=red>{request.result.ToString()}</color>");
 		return false;
 	}
 	#endregion

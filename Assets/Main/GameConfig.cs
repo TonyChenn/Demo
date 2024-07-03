@@ -56,28 +56,13 @@ public class GameConfig : MonoBehaviour
 		Log.Info("当前渠道：" + channel);
 		Log.Info("运行模式：" + playMode);
 
-		yield return StartHotUpdate();
+		StartHotUpdate();
 	}
 
-	private IEnumerator StartHotUpdate()
+	private void StartHotUpdate()
 	{
-		string path = $"{Application.streamingAssetsPath}/ui/prefabs/ui_start.u";
-		if (playMode == PlayMode.HostMode)
-		{
-			string persistentPath = $"{Application.persistentDataPath}/ui/prefabs/ui_start.u";
-			if (System.IO.File.Exists(persistentPath))
-			{
-				path = persistentPath;
-			}
-		}
-		var bundleRequest = AssetBundle.LoadFromFileAsync(path);
-		yield return bundleRequest;
-
-		AssetBundle bundle = bundleRequest.assetBundle;
-		GameObject prefab = bundle.LoadAsset<GameObject>("MainPanel");
-		GameObject parent = GameObject.Find("UICanvas");
+		var prefab = Resources.Load<GameObject>("MainPanel");
 		Instantiate(prefab, Vector3.zero, Quaternion.identity, UIRoot.CommonLayer);
-		bundle.UnloadAsync(false);
 	}
 }
 

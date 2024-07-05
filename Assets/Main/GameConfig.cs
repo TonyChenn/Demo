@@ -61,7 +61,7 @@ public class GameConfig : MonoBehaviour
 
 	private void StartHotUpdate()
 	{
-		var prefab = Resources.Load<GameObject>("MainPanel");
+		var prefab = Resources.Load<GameObject>("UpdatePanel");
 		Instantiate(prefab, Vector3.zero, Quaternion.identity, UIRoot.CommonLayer);
 	}
 }

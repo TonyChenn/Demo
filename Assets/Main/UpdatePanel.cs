@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class MainPanel : MonoBehaviour
+public class UpdatePanel : MonoBehaviour
 {
     [SerializeField] Text AppVersion;
     [SerializeField] Text ClientVersion;
@@ -34,10 +34,7 @@ public class MainPanel : MonoBehaviour
         ProgressBar.fillAmount = 0f;
 
         BtnFixClient.onClick.AddListener(FixClientClickHandler);
-        TglAllow.onValueChanged.AddListener((isOn) =>
-        {
-            BtnEnterGame.enabled = isOn;
-        });
+        TglAllow.onValueChanged.AddListener((isOn) => { BtnEnterGame.enabled = isOn; });
 
         await Version.CheckUpdate(RefreshLocalVersion, RefreshRemoteVersion, RefreshProgressValue);
     }
@@ -54,7 +51,7 @@ public class MainPanel : MonoBehaviour
 
     private void FixClientClickHandler()
     {
-		UI_Update.ShowDialog("修复客户端将会清空所有资源，是否继续？", () =>
+		UpdateDialog.ShowDialog("修复客户端将会清空所有资源，是否继续？", () =>
 		{
 			Version.FixClient();
 			Version.NeedFixClient = true;
@@ -63,13 +60,9 @@ public class MainPanel : MonoBehaviour
 #else
 			Application.Quit();
 #endif
-		});
+		},
+		() => { });
 	}
-
-    private void RestartClient()
-    {
-        Debug.Log("请重启客户端");
-    }
 
     private void RefreshProgressValue(Version.UpdateState state, int rate)
     {
@@ -102,8 +95,7 @@ public class MainPanel : MonoBehaviour
             case Version.UpdateState.CanEnterGame:
                 TipInfo.text = string.Format("");
                 TipInfo.gameObject.SetActive(false);
-                EnterGroup.gameObject.SetActive(true);
-                RightGroup.gameObject.SetActive(true);
+				UpdateFinished();
                 break;
             default:
                 break;
@@ -111,4 +103,16 @@ public class MainPanel : MonoBehaviour
         ProgressValue.text = rate + "%";
         ProgressBar.fillAmount = rate / 100.0f;
     }
+
+
+	/// <summary>
+	/// 热更完成，加载C# DLL，进入游戏
+	/// </summary>
+	private void UpdateFinished()
+	{
+		CSharpLoader.LoadDLL();
+
+		EnterGroup.gameObject.SetActive(true);
+		RightGroup.gameObject.SetActive(true);
+	}
 }

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class UI_Update : MonoBehaviour
+public class UpdateDialog : MonoBehaviour
 {
 	[SerializeField] Text tipText;
 	[SerializeField] Transform group1;
@@ -46,8 +46,8 @@ public class UI_Update : MonoBehaviour
 			dialog.Call("show");
 		}));
 #endif
-		GameObject prefab = Resources.Load<GameObject>("ui_updatetip");
-		UI_Update ui = Instantiate(prefab, Vector3.zero, Quaternion.identity, UIRoot.CommonLayer).GetComponent<UI_Update>();
+		GameObject prefab = Resources.Load<GameObject>("UpdateDialog");
+		UpdateDialog ui = Instantiate(prefab, Vector3.zero, Quaternion.identity, UIRoot.CommonLayer).GetComponent<UpdateDialog>();
 		ui.tipText.text = tip;
 
 		if (onYes != null && onNo != null)

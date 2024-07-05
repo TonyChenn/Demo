@@ -53,7 +53,7 @@ public static class Version
 		if (Application.internetReachability == NetworkReachability.NotReachable)
 		{
 			Log.Info("[00] 没有网络连接");
-			UI_Update.ShowDialog("没有网络连接重新尝试", async () =>
+			UpdateDialog.ShowDialog("没有网络连接重新尝试", async () =>
 			{
 				await Task.Delay(2);
 				await CheckUpdate(refreshLocalVersionAction, refreshRemoteVersionAction, refreshProgressValueAction);
@@ -85,7 +85,7 @@ public static class Version
 		var remoteVersionReq = await GetRemoteVersion();
 		if (remoteVersionReq == null)
 		{
-			UI_Update.ShowDialog("获取远程版本失败,请重新尝试", async () =>
+			UpdateDialog.ShowDialog("获取远程版本失败,请重新尝试", async () =>
 			{
 				await CheckUpdate(refreshLocalVersionAction, refreshRemoteVersionAction, refreshProgressValueAction);
 			},
@@ -115,7 +115,7 @@ public static class Version
 		if (localBig < remoteBig)
 		{
 			Log.Info("[02] 请下载最新安装包");
-			UI_Update.ShowDialog("检测到最新安装包,请到应用商店进行下载", () => { Application.OpenURL("https://blog.tonychenn.cn"); });
+			UpdateDialog.ShowDialog("检测到最新安装包,请到应用商店进行下载", () => { Application.OpenURL("https://blog.tonychenn.cn"); });
 			return;
 		}
 
@@ -152,7 +152,7 @@ public static class Version
 		{
 			refreshProgressValueAction(UpdateState.GetRemoteResFail, 50);
 
-			UI_Update.ShowDialog("获取远程资源清单失败,请重新尝试", async () =>
+			UpdateDialog.ShowDialog("获取远程资源清单失败,请重新尝试", async () =>
 			{
 				await CheckUpdate(refreshLocalVersionAction, refreshRemoteVersionAction, refreshProgressValueAction);
 			},
@@ -216,7 +216,7 @@ public static class Version
 		}
 
 		string _content = string.Format("检测到更新{0},是否使用流量进行下载", GetByteLengthString(downloadSize));
-		UI_Update.ShowDialog(_content,
+		UpdateDialog.ShowDialog(_content,
 							() => { DownloadUpdateBundleAsync(modifyList, delList, downloadSize); NeedFixClient = false; },
 							() => Application.Quit());
 	}
@@ -402,8 +402,7 @@ public static class Version
 			refreshProgressValueAction(UpdateState.Download, 100);
 
 			Log.Info("[10] 更新完成，进入游戏(无需重启)");
-			UI_Update.ShowDialog("更新已完成");
-			CSharpLoader.LoadDLL();
+			refreshProgressValueAction(UpdateState.CanEnterGame, 100);
 		});
 	}
 

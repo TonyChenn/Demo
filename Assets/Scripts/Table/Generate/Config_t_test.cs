@@ -1,9 +1,10 @@
 /// <summary>
 /// 本文件中的代码为生成的代码，不允许手动修改
+/// Generate by TonyChenn @
 /// </summary>
+
 using System;
 using UnityEngine;
-using NCore;
 
 [Serializable]
 public partial class Item_t_test
@@ -32,7 +33,7 @@ public partial class Config_t_test : ScriptableObject
         }
     }
 
-    static void Init()
+    private static void Init()
     {
 #if UNITY_EDITOR
         if (GameConfig.UseLocalAsset)
@@ -44,21 +45,27 @@ public partial class Config_t_test : ScriptableObject
 #endif
     }
 
-    static void LoadFromBundle()
+    private static void LoadFromBundle()
     {
-        //var item = new NormalAssetItem("/Table/t_test.u");
-        //item.Load(() =>
-        //{
-        //    Singleton = item.AssetObj as Config_t_test;
-        //});
+		string path = $"{Application.streamingAssetsPath}/asset/table/t_test.u";
+		if(GameConfig.PlayMode == PlayMode.HostMode)
+		{
+			string temp = $"{Application.persistentDataPath}/asset/table/t_test.u";
+			if (System.IO.File.Exists(temp))
+			{
+				path = temp;
+			}
+		}
+		AssetBundle bundle = AssetBundle.LoadFromFile(path);
+		_instence = bundle.LoadAsset<Config_t_test>("asset/table/t_test.u");
     }
 
 #if UNITY_EDITOR
-    static void LoadFromLocal()
-{
-    string path = "Assets/BuildBundle/Asset/Table/t_test.asset";
-    var obj = UnityEditor.AssetDatabase.LoadAssetAtPath<Config_t_test>(path);
-    _instence = obj;
-}
+    private static void LoadFromLocal()
+	{
+		string path = "Assets/BuildBundle/Asset/Table/t_test.asset";
+		var obj = UnityEditor.AssetDatabase.LoadAssetAtPath<Config_t_test>(path);
+		_instence = obj;
+	}
 #endif
 }

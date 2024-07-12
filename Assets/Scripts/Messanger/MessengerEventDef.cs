@@ -1,4 +1,4 @@
-﻿
+
 namespace Messengers
 {
     public class MessengerDef

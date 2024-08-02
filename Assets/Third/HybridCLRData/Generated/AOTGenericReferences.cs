@@ -7,6 +7,7 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 	{
 		"N-Core.dll",
 		"System.Core.dll",
+		"UnityEngine.AndroidJNIModule.dll",
 		"UnityEngine.AssetBundleModule.dll",
 		"UnityEngine.CoreModule.dll",
 		"UnityEngine.JSONSerializeModule.dll",
@@ -150,16 +151,36 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// System.Collections.Generic.List<object> System.Linq.Enumerable.ToList<object>(System.Collections.Generic.IEnumerable<object>)
 		// System.Collections.Generic.IEnumerable<object> System.Linq.Enumerable.Iterator<int>.Select<object>(System.Func<int,object>)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,ToastPanel.<Show>d__3>(System.Runtime.CompilerServices.TaskAwaiter&,ToastPanel.<Show>d__3&)
-		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter,UIKit.UIManager.<PrepareUIAsync>d__11>(System.Runtime.CompilerServices.TaskAwaiter&,UIKit.UIManager.<PrepareUIAsync>d__11&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,ThreadSync.<<print1>b__11_0>d>(System.Runtime.CompilerServices.TaskAwaiter<object>&,ThreadSync.<<print1>b__11_0>d&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,ThreadSync.<print2>d__12>(System.Runtime.CompilerServices.TaskAwaiter<object>&,ThreadSync.<print2>d__12&)
+		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.AwaitUnsafeOnCompleted<System.Runtime.CompilerServices.TaskAwaiter<object>,UIKit.UIManager.<PrepareUIAsync>d__11>(System.Runtime.CompilerServices.TaskAwaiter<object>&,UIKit.UIManager.<PrepareUIAsync>d__11&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<ThreadSync.<<print1>b__11_0>d>(ThreadSync.<<print1>b__11_0>d&)
-		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<ThreadSync.<Start>d__10>(ThreadSync.<Start>d__10&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<ThreadSync.<print2>d__12>(ThreadSync.<print2>d__12&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<ToastPanel.<Show>d__3>(ToastPanel.<Show>d__3&)
 		// System.Void System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Start<UIKit.UIManager.<PrepareUIAsync>d__11>(UIKit.UIManager.<PrepareUIAsync>d__11&)
 		// object& System.Runtime.CompilerServices.Unsafe.As<object,object>(object&)
 		// System.Void* System.Runtime.CompilerServices.Unsafe.AsPointer<object>(object&)
+		// int UnityEngine.AndroidJNIHelper.ConvertFromJNIArray<int>(System.IntPtr)
+		// object UnityEngine.AndroidJNIHelper.ConvertFromJNIArray<object>(System.IntPtr)
+		// System.IntPtr UnityEngine.AndroidJNIHelper.GetFieldID<int>(System.IntPtr,string,bool)
+		// System.IntPtr UnityEngine.AndroidJNIHelper.GetFieldID<object>(System.IntPtr,string,bool)
+		// System.IntPtr UnityEngine.AndroidJNIHelper.GetMethodID<int>(System.IntPtr,string,object[],bool)
+		// System.IntPtr UnityEngine.AndroidJNIHelper.GetMethodID<object>(System.IntPtr,string,object[],bool)
+		// System.Void UnityEngine.AndroidJavaObject.Call<int>(string,int[])
+		// int UnityEngine.AndroidJavaObject.Call<int>(string,object[])
+		// object UnityEngine.AndroidJavaObject.Call<object>(string,object[])
+		// object UnityEngine.AndroidJavaObject.CallStatic<object>(string,object[])
+		// int UnityEngine.AndroidJavaObject.FromJavaArrayDeleteLocalRef<int>(System.IntPtr)
+		// object UnityEngine.AndroidJavaObject.FromJavaArrayDeleteLocalRef<object>(System.IntPtr)
+		// int UnityEngine.AndroidJavaObject.Get<int>(string)
+		// object UnityEngine.AndroidJavaObject.GetStatic<object>(string)
+		// System.Void UnityEngine.AndroidJavaObject.Set<int>(string,int)
+		// int UnityEngine.AndroidJavaObject._Call<int>(string,object[])
+		// object UnityEngine.AndroidJavaObject._Call<object>(string,object[])
+		// object UnityEngine.AndroidJavaObject._CallStatic<object>(string,object[])
+		// int UnityEngine.AndroidJavaObject._Get<int>(string)
+		// object UnityEngine.AndroidJavaObject._GetStatic<object>(string)
+		// System.Void UnityEngine.AndroidJavaObject._Set<int>(string,int)
 		// object UnityEngine.AssetBundle.LoadAsset<object>(string)
 		// object UnityEngine.Component.GetComponent<object>()
 		// object UnityEngine.Component.GetComponentInChildren<object>()
@@ -172,5 +193,13 @@ public class AOTGenericReferences : UnityEngine.MonoBehaviour
 		// Version.VersionInfo UnityEngine.JsonUtility.FromJson<Version.VersionInfo>(string)
 		// object UnityEngine.Object.Instantiate<object>(object,UnityEngine.Transform,bool)
 		// object UnityEngine.Object.Instantiate<object>(object,UnityEngine.Vector3,UnityEngine.Quaternion,UnityEngine.Transform)
+		// int UnityEngine._AndroidJNIHelper.ConvertFromJNIArray<int>(System.IntPtr)
+		// object UnityEngine._AndroidJNIHelper.ConvertFromJNIArray<object>(System.IntPtr)
+		// System.IntPtr UnityEngine._AndroidJNIHelper.GetFieldID<int>(System.IntPtr,string,bool)
+		// System.IntPtr UnityEngine._AndroidJNIHelper.GetFieldID<object>(System.IntPtr,string,bool)
+		// System.IntPtr UnityEngine._AndroidJNIHelper.GetMethodID<int>(System.IntPtr,string,object[],bool)
+		// System.IntPtr UnityEngine._AndroidJNIHelper.GetMethodID<object>(System.IntPtr,string,object[],bool)
+		// string UnityEngine._AndroidJNIHelper.GetSignature<int>(object[])
+		// string UnityEngine._AndroidJNIHelper.GetSignature<object>(object[])
 	}
 }

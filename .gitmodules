@@ -13,3 +13,6 @@
 [submodule "Assets/Modules/N-ResKit"]
 	path = Assets/Modules/N-ResKit
 	url = https://github.com/TonyChenn/N-ResKit.git
+[submodule "Assets/Modules/N-Native"]
+	path = Assets/Modules/N-Native
+	url = https://github.com/TonyChenn/N-Native.git

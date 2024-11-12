@@ -61,7 +61,6 @@ public class UITableView : MonoBehaviour
 
 	private void Start()
 	{
-		ReloadData();
 		isFirstReload = false;
 	}
 
@@ -72,7 +71,7 @@ public class UITableView : MonoBehaviour
 
 	private int indexFromOffset(float offset, ref Vector2 pos)
 	{
-		uint num = Delegate.NumberOfCells(this);
+		int num = Delegate.NumberOfCells(this);
 
 		float h = 0;
 		pos.y = 0;
@@ -233,7 +232,7 @@ public class UITableView : MonoBehaviour
 		}
 
 		float height = 0;
-		uint num = Delegate.NumberOfCells(this);
+		int num = Delegate.NumberOfCells(this);
 		for (int i = 0; i < num; ++i)
 		{
 			Vector2 itemSize = Delegate.SizeForIndex(this, i);
@@ -367,7 +366,7 @@ public class UITableView : MonoBehaviour
 			float y = 0;
 			if (Delegate != null)
 			{
-				uint num = Delegate.NumberOfCells(this);
+				int num = Delegate.NumberOfCells(this);
 				for (int i = 0; i < num; ++i)
 				{
 					Vector2 size = Delegate.SizeForIndex(this, i);
@@ -420,7 +419,7 @@ public class UITableView : MonoBehaviour
 
 public interface ITableViewDelegate
 {
-	uint NumberOfCells(UITableView tableview);
+	int NumberOfCells(UITableView tableview);
 	UITableViewCell CellForIndex(UITableView tableview, int index);
 	Vector2 SizeForIndex(UITableView tableview, int index);
 	void OnScrollChanged(Vector2 pos);

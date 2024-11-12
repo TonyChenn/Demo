@@ -1,4 +1,3 @@
-using TMPro;
 using UnityEngine;
 
 public class HorizontalScrollPanel : MonoBehaviour, ITableViewDelegate
@@ -26,10 +25,10 @@ public class HorizontalScrollPanel : MonoBehaviour, ITableViewDelegate
 
 	public Vector2 SizeForIndex(UITableView tableview, int index)
 	{
-		return new Vector2(510, 52);
+		return itemPrefab.GetComponent<RectTransform>().sizeDelta;
 	}
 
-	public uint NumberOfCells(UITableView tableview)
+	public int NumberOfCells(UITableView tableview)
 	{
 		return 100;
 	}

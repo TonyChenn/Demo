@@ -1,4 +1,3 @@
-using TMPro;
 using UnityEngine;
 
 public class VerticalScrollPanel : MonoBehaviour, ITableViewDelegate
@@ -6,8 +5,11 @@ public class VerticalScrollPanel : MonoBehaviour, ITableViewDelegate
 	[SerializeField] UITableView tableView;
 	[SerializeField] VerticalScrollItem itemPrefab;
 
+
 	private void Start()
 	{
+		itemPrefab.gameObject.SetActive(false);
+
 		tableView.Delegate = this;
 		tableView.ReloadData();
 	}
@@ -26,10 +28,10 @@ public class VerticalScrollPanel : MonoBehaviour, ITableViewDelegate
 
 	public Vector2 SizeForIndex(UITableView tableview, int index)
 	{
-		return new Vector2(510, 52);
+		return itemPrefab.GetComponent<RectTransform>().sizeDelta;
 	}
 
-	public uint NumberOfCells(UITableView tableview)
+	public int NumberOfCells(UITableView tableview)
 	{
 		return 100;
 	}

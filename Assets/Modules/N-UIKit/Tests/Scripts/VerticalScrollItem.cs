@@ -1,11 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class VerticalScrollItem : UITableViewCell
 {
-	[SerializeField] TextMeshProUGUI text;
+	[SerializeField] Text text;
 
 	public override void UpdateCell(int index)
 	{

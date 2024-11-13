@@ -88,12 +88,12 @@ public class UITableView : MonoBehaviour
 				pos.x = 0;
 				for (int i = 0; i < num; i++)
 				{
-					pos.x = -wh;
+					pos.x = wh;
 					Vector2 size = Delegate.SizeForIndex(this, i);
 					wh += size.x;
 					if (wh > offset) return i;
 				}
-				pos.x = -wh;
+				pos.x = wh;
 				break;
 		}
 
@@ -171,7 +171,7 @@ public class UITableView : MonoBehaviour
 		{
 			float xy = 0;
 			if (direction == MoveDirection.TopToBottom) xy = pos.y - startOffset;
-			else if (direction == MoveDirection.LeftToRight) xy = pos.x - startOffset;
+			else if (direction == MoveDirection.LeftToRight) xy = pos.x + startOffset;
 
 			for (int i = from; i <= to; ++i)
 			{
@@ -189,7 +189,7 @@ public class UITableView : MonoBehaviour
 					else if (direction == MoveDirection.LeftToRight)
 					{
 						cell.RectTrans.anchoredPosition = new Vector2(xy, 0);
-						xy -= size.x;
+						xy += size.x;
 					}
 				}
 			}
@@ -219,7 +219,7 @@ public class UITableView : MonoBehaviour
 					}
 					else if (direction == MoveDirection.LeftToRight)
 					{
-						xy += size.x;
+						xy -= size.x;
 						cell.RectTrans.anchoredPosition = new Vector2(xy, 0);
 					}
 				}
@@ -240,7 +240,7 @@ public class UITableView : MonoBehaviour
 			else if (direction == MoveDirection.LeftToRight)
 			{
 				xy = _cell.RectTrans.anchoredPosition.x;
-				xy -= size.x;
+				xy += size.x;
 			}
 
 			for (int i = end + 1; i <= to; ++i)
@@ -259,7 +259,7 @@ public class UITableView : MonoBehaviour
 					else if (direction == MoveDirection.LeftToRight)
 					{
 						cell.RectTrans.anchoredPosition = new Vector2(xy, 0);
-						xy -= size.x;
+						xy += size.x;
 					}
 				}
 			}
@@ -327,20 +327,12 @@ public class UITableView : MonoBehaviour
 
 	public UITableViewCell HeadCellInSight()
 	{
-		if (usedCells.Count > 0)
-		{
-			return usedCells[0];
-		}
-		return null;
+		return usedCells.Count > 0 ? usedCells[0] : null;
 	}
 
 	public UITableViewCell TailCellInSight()
 	{
-		if (usedCells.Count > 1)
-		{
-			return usedCells[usedCells.Count - 1];
-		}
-		return HeadCellInSight();
+		return usedCells.Count > 1 ? usedCells[usedCells.Count - 1] : HeadCellInSight();
 	}
 
 	public UITableViewCell CellAtIndex(int index)
@@ -348,33 +340,20 @@ public class UITableView : MonoBehaviour
 		if (usedCells.Count > 0)
 		{
 			UITableViewCell cell = usedCells[0];
-			if (index == cell.Index)
-			{
-				return cell;
-			}
-			else if (index < cell.Index)
-			{
-				return null;
-			}
+			if (index == cell.Index) return cell;
+			else if (index < cell.Index) return null;
+
 			if (usedCells.Count > 1)
 			{
 				cell = usedCells[usedCells.Count - 1];
-				if (index == cell.Index)
-				{
-					return cell;
-				}
-				else if (index > cell.Index)
-				{
-					return null;
-				}
+
+				if (index == cell.Index) return cell;
+				else if (index > cell.Index) return null;
 
 				for (int i = 1; i < usedCells.Count - 1; ++i)
 				{
 					cell = usedCells[i];
-					if (cell.Index == index)
-					{
-						return cell;
-					}
+					if (cell.Index == index) return cell;
 				}
 			}
 		}
@@ -400,14 +379,9 @@ public class UITableView : MonoBehaviour
 	public void ScrollToOffset(Vector2 offset)
 	{
 		Vector2 max = MaxOffset();
-		if (offset.x > max.x)
-		{
-			offset.x = max.x;
-		}
-		if (offset.y > max.y)
-		{
-			offset.y = max.y;
-		}
+		offset.x = Math.Min(offset.x, max.x);
+		offset.y = Math.Min(offset.y, max.y);
+
 		CachedRectContent.anchoredPosition = offset;
 	}
 
@@ -461,7 +435,7 @@ public class UITableView : MonoBehaviour
 		}
 		else if (direction == MoveDirection.LeftToRight)
 		{
-			xy = CachedRectContent.anchoredPosition.x;
+			xy = -CachedRectContent.anchoredPosition.x;
 			maxXY = CachedRectContent.sizeDelta.x - CachedRectTrans.sizeDelta.x;
 		}
 

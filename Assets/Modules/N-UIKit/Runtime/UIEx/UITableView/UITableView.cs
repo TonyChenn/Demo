@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public delegate void OnTableViewCell(UITableViewCell cell);
-
 [RequireComponent(typeof(ScrollRect))]
 public class UITableView : MonoBehaviour
 {
@@ -13,21 +11,20 @@ public class UITableView : MonoBehaviour
 	[SerializeField] MoveDirection direction = MoveDirection.TopToBottom;
 	[SerializeField] float startOffset = 0;
 	[SerializeField] float endOffset = 0;
-
-	[HideInInspector] public RectTransform CachedRectTrans { get; private set; }
-	[HideInInspector] public RectTransform CachedRectContent { get; private set; }
 	[HideInInspector] public ITableViewDelegate Delegate { get; set; }
+	[HideInInspector] public RectTransform CachedRectTrans{ get; private set; }
+	[HideInInspector] public RectTransform CachedRectContent {  get; private set; }
+	
+	private ScrollRect scrollRect;
 
-	bool isFirstReload = true;
 	const float threshold = 0.1f;
 
+	private bool isFirstReload = true;
+	private float offsetY = 0;
 
-	public event OnTableViewCell eventCellWillAppear;
-	public event OnTableViewCell eventCellWillDisappear;
+	private Action<UITableViewCell> cellWillAppearAction;
+	private Action<UITableViewCell> cellWillDisappearAction;
 
-	float offsetY = 0;
-
-	private ScrollRect scrollRect;
 
 	List<UITableViewCell> usedCells = new List<UITableViewCell>(8);
 	List<UITableViewCell> unUsedCells = new List<UITableViewCell>(8);
@@ -38,7 +35,12 @@ public class UITableView : MonoBehaviour
 		scrollRect = GetComponent<ScrollRect>();
 		CachedRectContent = scrollRect.content;
 
-		scrollRect.onValueChanged.AddListener(OnScrollChanged);
+		scrollRect.onValueChanged.AddListener(onScrollChanged);
+	}
+
+	private void Start()
+	{
+		isFirstReload = false;
 	}
 
 	private void OnDestroy()
@@ -48,14 +50,94 @@ public class UITableView : MonoBehaviour
 		usedCells.Clear();
 		unUsedCells.Clear();
 
-		eventCellWillAppear = null;
-		this.eventCellWillDisappear = null;
+		cellWillAppearAction = null;
+		cellWillDisappearAction = null;
 	}
 
-	private void Start()
+
+	#region API
+	public void OnCellWillAppear(Action<UITableViewCell> action)
 	{
-		isFirstReload = false;
+		if (action != null) cellWillAppearAction += action;
 	}
+	public void OnCellWillDisappear(Action<UITableViewCell> action)
+	{
+		if (action != null) cellWillDisappearAction += action;
+	}
+
+	public void ReloadDataInPos()
+	{
+		Vector2 pos = CachedRectContent.anchoredPosition;
+		ReloadData();
+		CachedRectContent.anchoredPosition = pos;
+	}
+	public void ReloadData()
+	{
+		ResetData();
+		scrollRect.StopMovement();
+
+		for (int i = usedCells.Count - 1; i >= 0; --i)
+		{
+			UITableViewCell cell = usedCells[i];
+			moveCellOutOfSight(cell);
+		}
+
+		float wh = 0;
+		int num = Delegate.NumberOfCells(this);
+		for (int i = 0; i < num; ++i)
+		{
+			Vector2 itemSize = Delegate.SizeForIndex(this, i);
+			if (direction == MoveDirection.TopToBottom) wh += itemSize.y;
+			else if (direction == MoveDirection.BottomToTop) wh += itemSize.y;
+			else if (direction == MoveDirection.LeftToRight) wh += itemSize.x;
+		}
+		wh += startOffset;
+		wh += endOffset;
+
+		Vector2 size = CachedRectContent.sizeDelta;
+		if (direction == MoveDirection.TopToBottom) size.y = wh;
+		else if (direction == MoveDirection.BottomToTop) size.y = wh;
+		else if (direction == MoveDirection.LeftToRight) size.x = wh;
+
+		CachedRectContent.sizeDelta = size;
+
+		float xy = 0;
+		float maxXY = 0;
+		if (direction == MoveDirection.TopToBottom)
+		{
+			xy = CachedRectContent.anchoredPosition.y;
+			maxXY = CachedRectContent.sizeDelta.y - CachedRectTrans.sizeDelta.y;
+		}
+		else if (direction == MoveDirection.BottomToTop)
+		{
+			xy = CachedRectContent.anchoredPosition.y;
+			maxXY = CachedRectContent.sizeDelta.y - CachedRectTrans.sizeDelta.y;
+		}
+		else if (direction == MoveDirection.LeftToRight)
+		{
+			xy = CachedRectContent.anchoredPosition.x;
+			maxXY = CachedRectContent.sizeDelta.x - CachedRectTrans.sizeDelta.x;
+		}
+
+		xy = Math.Clamp(xy, threshold, maxXY + threshold);
+
+		if (!Mathf.Approximately(offsetY, xy))
+		{
+			offsetY = xy;
+
+			Vector2 posTo = Vector2.zero;
+			Vector2 posFrom = Vector2.zero;
+			int from = indexFromOffset(offsetY, ref posFrom);
+			int to = 0;
+			if (direction == MoveDirection.TopToBottom) to = indexFromOffset(offsetY + CachedRectTrans.sizeDelta.y, ref posTo);
+			else if (direction == MoveDirection.BottomToTop) to = indexFromOffset(offsetY + CachedRectTrans.sizeDelta.y, ref posTo);
+			else if (direction == MoveDirection.LeftToRight) to = indexFromOffset(offsetY + CachedRectTrans.sizeDelta.x, ref posTo);
+
+			removeUnvisibleCells(from, to);
+			showVisibleCells(from, to, posFrom);
+		}
+	}
+	#endregion
 
 	private void ResetData()
 	{
@@ -113,7 +195,7 @@ public class UITableView : MonoBehaviour
 		cell.Index = index;
 		cell.enabled = true;
 
-		eventCellWillAppear?.Invoke(cell);
+		cellWillAppearAction?.Invoke(cell);
 
 		cell.transform.SetParent(CachedRectContent.transform, false);
 
@@ -131,7 +213,7 @@ public class UITableView : MonoBehaviour
 
 	private void moveCellOutOfSight(UITableViewCell cell)
 	{
-		eventCellWillDisappear?.Invoke(cell);
+		cellWillDisappearAction?.Invoke(cell);
 
 		cell.Index = -1;
 		cell.transform.SetParent(null, false);
@@ -293,73 +375,6 @@ public class UITableView : MonoBehaviour
 		}
 	}
 
-	public void ReloadData()
-	{
-		ResetData();
-		scrollRect.StopMovement();
-
-		for (int i = usedCells.Count - 1; i >= 0; --i)
-		{
-			UITableViewCell cell = usedCells[i];
-			moveCellOutOfSight(cell);
-		}
-
-		float wh = 0;
-		int num = Delegate.NumberOfCells(this);
-		for (int i = 0; i < num; ++i)
-		{
-			Vector2 itemSize = Delegate.SizeForIndex(this, i);
-			if (direction == MoveDirection.TopToBottom) wh += itemSize.y;
-			else if (direction == MoveDirection.BottomToTop) wh += itemSize.y;
-			else if (direction == MoveDirection.LeftToRight) wh += itemSize.x;
-		}
-		wh += startOffset;
-		wh += endOffset;
-
-		Vector2 size = CachedRectContent.sizeDelta;
-		if (direction == MoveDirection.TopToBottom) size.y = wh;
-		else if (direction == MoveDirection.BottomToTop) size.y = wh;
-		else if (direction == MoveDirection.LeftToRight) size.x = wh;
-
-		CachedRectContent.sizeDelta = size;
-
-		float xy = 0;
-		float maxXY = 0;
-		if (direction == MoveDirection.TopToBottom)
-		{
-			xy = CachedRectContent.anchoredPosition.y;
-			maxXY = CachedRectContent.sizeDelta.y - CachedRectTrans.sizeDelta.y;
-		}
-		else if (direction == MoveDirection.BottomToTop)
-		{
-			xy = CachedRectContent.anchoredPosition.y;
-			maxXY = CachedRectContent.sizeDelta.y - CachedRectTrans.sizeDelta.y;
-		}
-		else if (direction == MoveDirection.LeftToRight)
-		{
-			xy = CachedRectContent.anchoredPosition.x;
-			maxXY = CachedRectContent.sizeDelta.x - CachedRectTrans.sizeDelta.x;
-		}
-
-		xy = Math.Clamp(xy, threshold, maxXY + threshold);
-
-		if (!Mathf.Approximately(offsetY, xy))
-		{
-			offsetY = xy;
-
-			Vector2 posTo = Vector2.zero;
-			Vector2 posFrom = Vector2.zero;
-			int from = indexFromOffset(offsetY, ref posFrom);
-			int to = 0;
-			if (direction == MoveDirection.TopToBottom) to = indexFromOffset(offsetY + CachedRectTrans.sizeDelta.y, ref posTo);
-			else if (direction == MoveDirection.BottomToTop) to = indexFromOffset(offsetY + CachedRectTrans.sizeDelta.y, ref posTo);
-			else if (direction == MoveDirection.LeftToRight) to = indexFromOffset(offsetY + CachedRectTrans.sizeDelta.x, ref posTo);
-
-			removeUnvisibleCells(from, to);
-			showVisibleCells(from, to, posFrom);
-		}
-	}
-
 	public UITableViewCell HeadCellInSight()
 	{
 		return usedCells.Count > 0 ? usedCells[0] : null;
@@ -465,7 +480,7 @@ public class UITableView : MonoBehaviour
 	}
 
 	//scrollrect event
-	public void OnScrollChanged(Vector2 pos)
+	private void onScrollChanged(Vector2 pos)
 	{
 		float xy = 0;
 		float maxXY = 0;
@@ -506,7 +521,6 @@ public class UITableView : MonoBehaviour
 
 		Delegate.OnScrollChanged(CachedRectContent.anchoredPosition);
 	}
-
 }
 
 public interface ITableViewDelegate

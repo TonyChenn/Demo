@@ -3,6 +3,79 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+
+public abstract class UITableViewCell : MonoBehaviour
+{
+	[HideInInspector] public RectTransform RectTrans { get; private set; }
+	[HideInInspector] public int Index { get; set; }
+
+
+	protected void Awake()
+	{
+		RectTrans = GetComponent<RectTransform>();
+		Index = -1;
+	}
+
+	public abstract void UpdateCell(int index);
+}
+
+[APIInfo("N-uGUI", "UITableView", @"移植自cocos2dx中cc.TableView组件。
+支持高性能大量数据展示，支持：
+1. ListView横向/竖向滚动
+2. GridView横向/竖向滚动
+3. 节点大小不固定横向/竖向滚动
+
+# API文档
+- SetTableViewDelegate
+- OnCellWillAppear
+- OnCellWillDisappear
+- ReloadData
+- ReloadDataInPos
+
+# 横向滚动示例：
+```csharp
+public class HorizontalScrollPanel : MonoBehaviour, ITableViewDelegate
+{
+	[SerializeField] UITableView tableView;
+	[SerializeField] VerticalScrollItem itemPrefab;
+
+	private void Start()
+	{
+		// 绑定事件
+		tableView.SetTableViewDelegate(this);
+		// 刷新UI
+		tableView.ReloadData();
+	}
+
+	// 根据索引显示item
+	public UITableViewCell CellForIndex(UITableView tableview, int index)
+	{
+		UITableViewCell item = tableView.DequeueCell();
+		if (item == null)
+		{
+			item = Instantiate(itemPrefab, tableview.CachedRectContent, false);
+			item.gameObject.SetActive(true);
+		}
+		item.UpdateCell(index);
+		return item;
+	}
+
+	// 返回item的大小
+	public Vector2 SizeForIndex(UITableView tableview, int index)
+	{
+		return itemPrefab.GetComponent<RectTransform>().sizeDelta;
+	}
+
+	// item的数量
+	public int NumberOfCells(UITableView tableview)
+	{
+		return 100;
+	}
+
+	public void OnScrollChanged(Vector2 pos) { }
+}
+```
+")]
 [RequireComponent(typeof(ScrollRect))]
 public class UITableView : MonoBehaviour
 {
@@ -11,7 +84,6 @@ public class UITableView : MonoBehaviour
 	[SerializeField] MoveDirection direction = MoveDirection.TopToBottom;
 	[SerializeField] float startOffset = 0;
 	[SerializeField] float endOffset = 0;
-	[HideInInspector] public ITableViewDelegate Delegate { get; set; }
 	[HideInInspector] public RectTransform CachedRectTrans{ get; private set; }
 	[HideInInspector] public RectTransform CachedRectContent {  get; private set; }
 	
@@ -24,6 +96,7 @@ public class UITableView : MonoBehaviour
 
 	private Action<UITableViewCell> cellWillAppearAction;
 	private Action<UITableViewCell> cellWillDisappearAction;
+	private ITableViewDelegate Delegate;
 
 
 	List<UITableViewCell> usedCells = new List<UITableViewCell>(8);
@@ -56,6 +129,10 @@ public class UITableView : MonoBehaviour
 
 
 	#region API
+	public void SetTableViewDelegate(ITableViewDelegate dele)
+	{
+		Delegate = dele;
+	}
 	public void OnCellWillAppear(Action<UITableViewCell> action)
 	{
 		if (action != null) cellWillAppearAction += action;

@@ -7,7 +7,7 @@ public class HorizontalScrollPanel : MonoBehaviour, ITableViewDelegate
 
 	private void Start()
 	{
-		tableView.Delegate = this;
+		tableView.SetTableViewDelegate(this);
 		tableView.ReloadData();
 	}
 
@@ -33,7 +33,5 @@ public class HorizontalScrollPanel : MonoBehaviour, ITableViewDelegate
 		return 100;
 	}
 
-	public void OnScrollChanged(Vector2 pos)
-	{
-	}
+	public void OnScrollChanged(Vector2 pos) { }
 }

@@ -10,7 +10,7 @@ public class VerticalScrollPanel : MonoBehaviour, ITableViewDelegate
 	{
 		itemPrefab.gameObject.SetActive(false);
 
-		tableView.Delegate = this;
+		tableView.SetTableViewDelegate(this);
 		tableView.ReloadData();
 	}
 

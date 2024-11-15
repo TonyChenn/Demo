@@ -1,6 +1,16 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+[APIInfo("N-uGUI", "Base64Image", @"添加在uGUI中渲染Base64字符串图片，当前支持如下图片合适：
+- png
+- jpg
+
+# 示例：
+```csharp
+Base64Image base64Image;
+base64Image.base64Texture = ""iVBORwKNVsB1F1LY6bj0e0SpapBRCYII="";
+```
+")]
 [RequireComponent(typeof(CanvasRenderer))]
 [AddComponentMenu("UI/Base64Image", 12)]
 public class Base64Image : MaskableGraphic

@@ -1,6 +1,6 @@
 using UnityEditor;
 using System.IO;
-using NDebug;
+using UnityEngine;
 using System.Text;
 using System;
 
@@ -13,7 +13,7 @@ public class UIFlagGenerater
 
 		if (!Directory.Exists(uiBundleFolder))
 		{
-			Log.Info($"文件夹不存在：{uiBundleFolder}");
+			Debug.LogError($"文件夹不存在：{uiBundleFolder}");
 			return;
 		}
 		var dirs = Directory.GetDirectories(uiBundleFolder);

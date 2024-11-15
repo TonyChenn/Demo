@@ -11,6 +11,7 @@
     <type fullname="Version/VersionInfo" preserve="all" />
   </assembly>
   <assembly fullname="N-Core">
+    <type fullname="Log" preserve="all" />
     <type fullname="NCore.GameObjectExtention" preserve="all" />
     <type fullname="NCore.Networking.WebServer" preserve="all" />
     <type fullname="NCore.NormalSingleton`1" preserve="all" />
@@ -31,19 +32,12 @@
     <type fullname="RefCounter" preserve="all" />
     <type fullname="ResMgr" preserve="all" />
   </assembly>
-  <assembly fullname="NDebug">
-    <type fullname="NDebug.Log" preserve="all" />
-  </assembly>
   <assembly fullname="System">
     <type fullname="System.Text.RegularExpressions.Regex" preserve="all" />
   </assembly>
   <assembly fullname="System.Core">
     <type fullname="System.Linq.Enumerable" preserve="all" />
     <type fullname="System.Runtime.CompilerServices.DynamicAttribute" preserve="all" />
-  </assembly>
-  <assembly fullname="Unity.TextMeshPro">
-    <type fullname="TMPro.TMP_Text" preserve="all" />
-    <type fullname="TMPro.TextMeshProUGUI" preserve="all" />
   </assembly>
   <assembly fullname="UnityEngine.AndroidJNIModule">
     <type fullname="UnityEngine.Android.Permission" preserve="all" />
@@ -122,6 +116,9 @@
   <assembly fullname="UnityEngine.IMGUIModule">
     <type fullname="UnityEngine.GUILayout" preserve="all" />
     <type fullname="UnityEngine.GUILayoutOption" preserve="all" />
+  </assembly>
+  <assembly fullname="UnityEngine.ImageConversionModule">
+    <type fullname="UnityEngine.ImageConversion" preserve="all" />
   </assembly>
   <assembly fullname="UnityEngine.JSONSerializeModule">
     <type fullname="UnityEngine.JsonUtility" preserve="all" />

@@ -1,10 +1,10 @@
-using NDebug;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 using UnityEngine;
 
 /// <summary>
@@ -70,7 +70,7 @@ public class BundleDownloader : MonoBehaviour
 	private Action downloadFinishCallback = null;
 	private Action<int> refreshUIHandler = null;
 
-	public void DownloadAsync(List<ResManifest.ResUnit> downloadList, Action<int> refreshUIHandler, Action callback = null)
+	public async Task DownloadAsync(List<ResManifest.ResUnit> downloadList, Action<int> refreshUIHandler, Action callback = null)
 	{
 		if (downloadList != null && downloadList.Count > 0)
 		{
@@ -101,13 +101,13 @@ public class BundleDownloader : MonoBehaviour
 				downloadingThreads.Add(maxThreadID);
 			}
 
-			downloadHandler(maxThreadID);
+			await downloadHandler(maxThreadID);
 		}
 		return;
 	}
 
 
-	private async void downloadHandler(int threadID)
+	private async Task downloadHandler(int threadID)
 	{
 		byte[] buffer = new byte[102400];
 
@@ -138,6 +138,7 @@ public class BundleDownloader : MonoBehaviour
 					File.Move(item.TempPath, item.SavePath);
 					downloadedBytes += item.Size;
 					item.DownloadState = DownloadState.Downloaded;
+					Debug.Log($"{item.Name} Success, {needDownloadQuque.Count}");
 					return;
 				}
 				downloadErrorHandler(threadID, item);
@@ -154,34 +155,35 @@ public class BundleDownloader : MonoBehaviour
 				if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
 				var totalSize = existingSize + response.Content.Headers.ContentLength.GetValueOrDefault();
-				using FileStream fileStream = new FileStream(item.TempPath, FileMode.Append, FileAccess.Write, FileShare.Write);
-				var stream = await response.Content.ReadAsStreamAsync();
-
-
-				int readLength = 0;
-				int length = 0;
-				while ((length = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+				using (FileStream fileStream = new FileStream(item.TempPath, FileMode.Append, FileAccess.Write, FileShare.Write))
 				{
-					readLength += length;
-					Log.Info($"thread {threadID} downloading:{item.Name}--->{readLength}/{totalSize}");
-					await fileStream.WriteAsync(buffer, 0, length);
-					downloadingBytes[threadID] = readLength + existingSize;
+					var stream = await response.Content.ReadAsStreamAsync();
 
-					long size = 0;
-					downloadingBytes.Values.ToList().ForEach(v => size += v);
-					float percent = size * 99 / totalNeedDownloadBytes;
-					refreshUIHandler?.Invoke((int)percent);
+
+					int readLength = 0;
+					int length = 0;
+					while ((length = await stream.ReadAsync(buffer, 0, buffer.Length)) > 0)
+					{
+						readLength += length;
+						UpdateLog.Info($"thread {threadID} downloading:{item.Name}--->{(int)(readLength*100/ totalSize)}%");
+						await fileStream.WriteAsync(buffer, 0, length);
+						downloadingBytes[threadID] = readLength + existingSize;
+
+						long size = 0;
+						downloadingBytes.Values.ToList().ForEach(v => size += v);
+						float percent = size * 99 / totalNeedDownloadBytes;
+						refreshUIHandler?.Invoke((int)percent);
+					}
+					await fileStream.FlushAsync();
+					await fileStream.DisposeAsync();
+					await stream.DisposeAsync();
 				}
-				await fileStream.FlushAsync();
-				await fileStream.DisposeAsync();
-				await stream.DisposeAsync();
-
 				fileDownloadedCheck();
 			}
 			catch (Exception ex)
 			{
 				downloadErrorHandler(threadID, item);
-				Log.RedInfo(ex.Message);
+				Debug.Log(ex.Message);
 			}
 		}
 		Debug.Log($"download thread: {threadID} is finished");
@@ -207,23 +209,18 @@ public class BundleDownloader : MonoBehaviour
 		string tmpPath = item.TempPath;
 		if (!File.Exists(tmpPath)) return false;
 
-		string realMd5 = getFileMD5(tmpPath);
+		string realMd5 = getTempFileMD5(tmpPath);
 		if (item.MD5 != null && realMd5 != item.MD5)
 		{
-			Log.RedInfo($"md5 not match: file:{realMd5}\t record: {item.MD5}");
+			UpdateLog.RedInfo($"md5 not match: file:{realMd5}\t record: {item.MD5}");
 			return false;
 		}
 		return true;
 	}
 
-	private string getFileMD5(string filePath)
+	private string getTempFileMD5(string filePath)
 	{
-		var request = UnityEngine.Networking.UnityWebRequest.Get(filePath);
-		request.SendWebRequest();
-		while (!request.isDone) { if (request.error != null) { return null; } }
-		if (request.error != null) { return null; }
-		
-		byte[] buffer = request.downloadHandler.data;
+		byte[] buffer = File.ReadAllBytes(filePath);
 		if(buffer == null || buffer.Length < 1) return null;
 
 		var builder = new StringBuilder();
@@ -261,11 +258,12 @@ public class BundleDownloader : MonoBehaviour
 				// 多次下载失败，要求检查网络环境。
 				Application.Quit();
 #if UNITY_EDITOR
+				needDownloadQuque.Clear();
 				UnityEditor.EditorApplication.isPlaying = false;
 #endif
 			}
 		}
-		Log.RedInfo($"下载出错\t{downloadErrorDict[errorItem.Name]} 次：{errorItem.Name}\t{errorItem.DownloadUrl}");
+		Debug.Log($"下载出错\t{downloadErrorDict[errorItem.Name]} 次：{errorItem.Name}\t{errorItem.DownloadUrl}");
 	}
 
 	private Vector2 scrollPos = Vector2.zero;

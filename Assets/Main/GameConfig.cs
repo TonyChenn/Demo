@@ -1,4 +1,3 @@
-using NDebug;
 using System.Collections;
 using UnityEngine;
 
@@ -33,12 +32,12 @@ public class GameConfig : MonoBehaviour
 		Application.targetFrameRate = 60;
 		Application.runInBackground = true;
 		Screen.sleepTimeout = SleepTimeout.NeverSleep;
-		Debug.unityLogger.logEnabled = true;
 		QualitySettings.vSyncCount = 0;
 
 		// 运行时日志模块
 		if (runtimeLogViewer)
 		{
+			Debug.unityLogger.logEnabled = true;
 			Instantiate(Resources.Load("[Reporter]"), Vector3.zero, Quaternion.identity, transform.parent).name = "[Reporter]";
 		}
 #if !UNITY_EDITOR
@@ -53,8 +52,8 @@ public class GameConfig : MonoBehaviour
 		ChannelConfig.Init(channel);
 		yield return new WaitForEndOfFrame();
 
-		Log.Info("当前渠道：" + channel);
-		Log.Info("运行模式：" + playMode);
+		Debug.Log("当前渠道：" + channel);
+		Debug.Log("运行模式：" + playMode);
 
 		StartHotUpdate();
 	}

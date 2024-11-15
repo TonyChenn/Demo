@@ -54,8 +54,14 @@ public class CSharpLoader
 		}
 
 		AssetBundle bundle = AssetBundle.LoadFromFile(hotfixDll);
-		TextAsset dll = bundle.LoadAsset<TextAsset>("Assembly-CSharp.bytes");
+		TextAsset dll = bundle.LoadAsset<TextAsset>("Assembly-CSharp.dll.bytes");
+		TextAsset pdb = bundle.LoadAsset<TextAsset>("Assembly-CSharp.pdb.bytes");
+
+#if GAME_DEBUG || true
+		assembly = Assembly.Load(dll.bytes, pdb.bytes);
+#else
 		assembly = Assembly.Load(dll.bytes);
+#endif
 		Debug.Log($"----> 加载热更程序集记 Assembly-CSharp.bytes 完毕: {dll != null}");
 		bundle.Unload(true);
 		Debug.Log("---> 热更程序集加载完毕");

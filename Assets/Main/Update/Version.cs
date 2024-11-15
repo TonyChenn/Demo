@@ -1,11 +1,9 @@
 using System;
-using NDebug;
 using System.IO;
 using System.Threading.Tasks;
 using UnityEngine.Networking;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Text;
 
 public static class Version
 {
@@ -49,10 +47,10 @@ public static class Version
 		Version.refreshRemoteVersionAction = refreshRemoteVersionAction;
 		Version.refreshProgressValueAction = refreshProgressValueAction;
 
-		Log.Info($"[00] 检查网络状态：{Application.internetReachability}");
+		UpdateLog.Info($"[00] 检查网络状态：{Application.internetReachability}");
 		if (Application.internetReachability == NetworkReachability.NotReachable)
 		{
-			Log.Info("[00] 没有网络连接");
+			UpdateLog.Info("[00] 没有网络连接");
 			UpdateDialog.ShowDialog("没有网络连接重新尝试", async () =>
 			{
 				await Task.Delay(2);
@@ -62,9 +60,9 @@ public static class Version
 		}
 
 
-		Log.Info("[01] 开始检查更新流程");
+		UpdateLog.Info("[01] 开始检查更新流程");
 		refreshProgressValueAction(UpdateState.GetRemoteVersion, 0);
-		VersionInfo localVersionInfo = GetLocalVersionInfo();
+		VersionInfo localVersionInfo = await GetLocalVersionInfo();
 		int localSmall = localVersionInfo.smallVersion;
 		int localBig = localVersionInfo.bigVersion;
 		string str_local_version = $"{localBig}.{localSmall}";
@@ -72,16 +70,16 @@ public static class Version
 		refreshLocalVersionAction(str_local_version);
 
 
-		Log.Info($"[01] 获取本地版本号：{str_local_version}");
+		UpdateLog.Info($"[01] 获取本地版本号：{str_local_version}");
 		if (GameConfig.PlayMode == PlayMode.OfflineMode)
 		{
-			Log.Info("[01] 离线模式，无需更新，进入游戏");
+			UpdateLog.Info("[01] 离线模式，无需更新，进入游戏");
 			refreshRemoteVersionAction("offline");
 			refreshProgressValueAction(UpdateState.CanEnterGame, 100);
 			return;
 		}
 
-		Log.Info($"[02] 开始获取远程版本号");
+		UpdateLog.Info($"[02] 开始获取远程版本号");
 		var remoteVersionReq = await GetRemoteVersion();
 		if (remoteVersionReq == null)
 		{
@@ -102,19 +100,19 @@ public static class Version
 		}
 
 		byte[] datas = remoteVersionReq.downloadHandler.data;
-		VersionInfo remoteVersionInfo = JsonUtility.FromJson<VersionInfo>(Encoding.UTF8.GetString(datas));
+		VersionInfo remoteVersionInfo = JsonUtility.FromJson<VersionInfo>(System.Text.Encoding.UTF8.GetString(datas));
 		int remoteSmall = remoteVersionInfo.smallVersion;
 		int remoteBig = remoteVersionInfo.bigVersion;
 
 		string str_remote_version = $"{remoteBig}.{remoteSmall}";
 		refreshRemoteVersionAction(str_remote_version);
 		refreshProgressValueAction(UpdateState.GetRemoteVersion, 20);
-		Log.Info($"[02] 获取远程版本号：{str_remote_version}");
+		UpdateLog.Info($"[02] 获取远程版本号：{str_remote_version}");
 
 		// 强更，需要更新安装包
 		if (localBig < remoteBig)
 		{
-			Log.Info("[02] 请下载最新安装包");
+			UpdateLog.Info("[02] 请下载最新安装包");
 			UpdateDialog.ShowDialog("检测到最新安装包,请到应用商店进行下载", () => { Application.OpenURL("https://blog.tonychenn.cn"); });
 			return;
 		}
@@ -134,20 +132,17 @@ public static class Version
 		if (localSmall >= remoteSmall && !NeedFixClient)
 		{
 			DeleteTmpDownloadFolder();
-			Log.Info("[02] 版本号一致新进入游戏: 100%");
+			UpdateLog.Info("[02] 版本号一致新进入游戏: 100%");
 			refreshProgressValueAction(UpdateState.CanEnterGame, 100);
 			return;
 		}
 
 
-		Log.Info("[03] 开始获取远程资源列表: 25%");
+		UpdateLog.Info("[03] 开始获取远程资源列表: 25%");
 		refreshProgressValueAction(UpdateState.GetRemoteRes, 25);
 		string md5Name = remoteVersionInfo.md5;
-		var success = await DownloaRemoteMD5File(md5Name, (progress) =>
-		{
-			int progresss = 25 + (int)(progress * 25);
-			refreshProgressValueAction(UpdateState.GetRemoteRes, progresss);
-		});
+		var success = await DownloaRemoteMD5File(md5Name);
+
 		if (!success)
 		{
 			refreshProgressValueAction(UpdateState.GetRemoteResFail, 50);
@@ -168,39 +163,39 @@ public static class Version
 		}
 		// 版本号变更, 资源无变化
 		refreshProgressValueAction(UpdateState.CheckRes, 50);
-		string tmp_md5 = getFileMD5(TmpMD5FilePath);
-		Log.Info($"[03] 远程资源列表MD5: {tmp_md5}\t55%");
+		string tmp_md5 = await getFileMD5(TmpMD5FilePath);
+		UpdateLog.Info($"[03] 远程资源列表MD5: {tmp_md5}\t55%");
 		refreshProgressValueAction(UpdateState.CheckRes, 55);
-		string local_md5 = getFileMD5(PathUtil.GetBundlePath(MD5FILENAME, true));
-		Log.Info($"[03] 本地资源列表MD5: {local_md5}\t60%");
+		string local_md5 = await getFileMD5(PathUtil.GetBundlePath(MD5FILENAME, true));
+		UpdateLog.Info($"[03] 本地资源列表MD5: {local_md5}\t60%");
 		refreshProgressValueAction(UpdateState.CheckRes, 60);
 
 		if (tmp_md5 == local_md5 && !NeedFixClient)
 		{
-			Log.Info("[04] 版本号变更，资源无化，进入游戏 100%");
+			UpdateLog.Info("[04] 版本号变更，资源无化，进入游戏 100%");
 			refreshProgressValueAction(UpdateState.CanEnterGame, 95);
-			SaveVersionFile();
+			await SaveVersionFile();
 			DeleteTmpDownloadFolder();
 			refreshProgressValueAction(UpdateState.CanEnterGame, 100);
 			return;
 		}
 
-		Log.Info("[05] 开始对比变更资源\t75%");
+		UpdateLog.Info("[05] 开始对比变更资源\t75%");
 		refreshProgressValueAction(UpdateState.CheckRes, 75);
 		var modifyList = new List<ResManifest.ResUnit>(32);
 		var delList = new List<ResManifest.ResUnit>(0);
 		ulong downloadSize = 0;
 
 		CalNeedUpdateInfo(ref modifyList, ref delList, ref downloadSize, NeedFixClient);
-		Log.Info($"[05] 变动_新增：{modifyList.Count}, 删除：{delList.Count}, 下载大小{GetByteLengthString(downloadSize)}");
+		UpdateLog.Info($"[05] 变动_新增：{modifyList.Count}, 删除：{delList.Count}, 下载大小{GetByteLengthString(downloadSize)}");
 		refreshProgressValueAction(UpdateState.CheckRes, 99);
 
 
 		// 没有资源变动，无需下载
 		if (modifyList.Count == 0 && delList.Count == 0)
 		{
-			Log.Info("[05] 客户端资源无变动，进入游戏\t100%");
-			SaveVersionFile();
+			UpdateLog.Info("[05] 客户端资源无变动，进入游戏\t100%");
+			await SaveVersionFile();
 			DeleteTmpDownloadFolder();
 			refreshProgressValueAction(UpdateState.CanEnterGame, 100);
 			return;
@@ -209,25 +204,27 @@ public static class Version
 		// wifi连接直接开始下载
 		if (Application.internetReachability == NetworkReachability.ReachableViaLocalAreaNetwork && false)
 		{
-			Log.Info("[06] wifi 网络直接下载");
-			DownloadUpdateBundleAsync(modifyList, delList, downloadSize);
+			UpdateLog.Info("[06] wifi 网络直接下载");
+			await DownloadUpdateBundleAsync(modifyList, delList, downloadSize);
 			NeedFixClient = false;
 			return;
 		}
 
 		string _content = string.Format("检测到更新{0},是否使用流量进行下载", GetByteLengthString(downloadSize));
 		UpdateDialog.ShowDialog(_content,
-							() => { DownloadUpdateBundleAsync(modifyList, delList, downloadSize); NeedFixClient = false; },
+							async () => { await DownloadUpdateBundleAsync(modifyList, delList, downloadSize); NeedFixClient = false; },
 							() => Application.Quit());
 	}
 	#endregion
 
 
 	#region 获取远程、本地版本号
-	private static VersionInfo GetLocalVersionInfo()
+	private static async Task<VersionInfo> GetLocalVersionInfo()
 	{
 		string path = PathUtil.GetBundlePath(VERSIONFILENAME, true);
-		VersionInfo result = JsonUtility.FromJson<VersionInfo>(File.ReadAllText(path));
+		string info = await readFileAllText(path);
+		UpdateLog.Info($"[01] 读取LocalVersionInfo: {info}");
+		VersionInfo result = JsonUtility.FromJson<VersionInfo>(info);
 		return result;
 	}
 
@@ -236,8 +233,7 @@ public static class Version
 		string remoteUrl = PathUtil.GetBundleCDNUrl(VERSIONFILENAME, true);
 		Debug.Log($"[UnityWebRequest] >>> <color=green>{remoteUrl}</color>");
 		UnityWebRequest request = UnityWebRequest.Get($"{remoteUrl}?{DateTime.Now}");
-		request.SendWebRequest();
-		while (!request.isDone) { await Task.Delay(0); }
+		await request.SendWebRequest();
 		if (request.error != null)
 		{
 			Debug.Log($"[UnityWebRequest] <<< <color=red>{request.error}</color>");
@@ -263,41 +259,25 @@ public static class Version
 
 
 	#region 下载远程MD5文件
-	private static async Task<bool> DownloaRemoteMD5File(string md5, Action<float> refreshAction)
+	private static async Task<bool> DownloaRemoteMD5File(string md5)
 	{
 		string url = $"{ChannelConfig.CurCDNUrl}/{md5}.csv";
-
-		bool result = await DownloaRemoteMD5FileHandler(url, refreshAction);
-		return result;
-	}
-	private static async Task<bool> DownloaRemoteMD5FileHandler(string url, Action<float> refreshAction)
-	{
-		Debug.Log($"[UnityWebRequest] >>> <color=green>{url}</color>");
 		UnityWebRequest request = UnityWebRequest.Get(url);
-		request.SendWebRequest();
+		await request.SendWebRequest();
 
-		while (!request.isDone)
-		{
-			refreshAction?.Invoke(request.downloadProgress);
-			await Task.Delay(0);
-		}
-		if (request.error != null)
+		if (request.result != UnityWebRequest.Result.Success)
 		{
 			Debug.Log($"[UnityWebRequest] <<< <color=red>{request.error}</color>");
 			return false;
 		}
-		if (request.result == UnityWebRequest.Result.Success)
-		{
-			byte[] data = request.downloadHandler.data;
-			var fs = new FileStream(TmpMD5FilePath, FileMode.Create);
-			await fs.WriteAsync(data, 0, data.Length);
-			fs.Close();
 
-			Debug.Log("[UnityWebRequest] <<< <color=green>success</color>");
-			return true;
-		}
-		Debug.Log($"[UnityWebRequest] <<< <color=red>{request.result.ToString()}</color>");
-		return false;
+		byte[] data = request.downloadHandler.data;
+		var fs = new FileStream(TmpMD5FilePath, FileMode.Create);
+		await fs.WriteAsync(data, 0, data.Length);
+		fs.Close();
+
+		Debug.Log("[UnityWebRequest] <<< <color=green>success</color>");
+		return true;
 	}
 	#endregion
 
@@ -311,12 +291,12 @@ public static class Version
 								   ref ulong downloadSize, bool checkLocalAsset = false)
 	{
 		// 解析本地资源MD5数据
-		var localDict = new Dictionary<string, ResManifest.ResUnit>(256);
+		var localDict = new Dictionary<string, ResManifest.ResUnit>(512);
 		ResManifest.ParseResManifest(PathUtil.GetBundlePath(MD5FILENAME, true), localDict);
 
 
 		// 解析tmp数据(保存一份解析)
-		ResManifest.ResManifestDict = new Dictionary<string, ResManifest.ResUnit>(256);
+		ResManifest.ResManifestDict = new Dictionary<string, ResManifest.ResUnit>(512);
 		ResManifest.ParseResManifest(TmpMD5FilePath, ResManifest.ResManifestDict);
 		var tmpDict = ResManifest.ResManifestDict;
 
@@ -348,7 +328,13 @@ public static class Version
 			var path = PathUtil.GetBundlePersistPath(item.bundleName);
 			if (!File.Exists(path)) continue;
 
-			if (getFileMD5(path) == item.md5)
+			Debug.Log("------------------->");
+			Debug.Log("开启子线程计算MD5值");
+			
+			string realMD5 = Task.Run(() => getFileMD5(path)).Result;
+			Debug.Log(realMD5+" ----- "+item.md5);
+			Debug.Log("<------------------");
+			if (realMD5 == item.md5)
 			{
 				downloadSize -= ulong.Parse(item.size);
 				modifyList.Remove(item);
@@ -361,7 +347,7 @@ public static class Version
 			foreach (var item in tmpDict)
 			{
 				string path = PathUtil.GetBundlePath(item.Key);
-				string localMD5 = getFileMD5(path);
+				string localMD5 = Task.Run(() => getFileMD5(path)).Result;
 				if (localMD5 != item.Value.md5)
 				{
 					modifyList.Add(item.Value);
@@ -385,23 +371,23 @@ public static class Version
 	/// 下载AssetBundle
 	/// </summary>
 	/// <param name="modifyList"></param>
-	private static void DownloadUpdateBundleAsync(List<ResManifest.ResUnit> modifyList, List<ResManifest.ResUnit> deleteList, ulong downloadSize)
+	private static async Task DownloadUpdateBundleAsync(List<ResManifest.ResUnit> modifyList, List<ResManifest.ResUnit> deleteList, ulong downloadSize)
 	{
-		BundleDownloader.Singleton.DownloadAsync(modifyList, (percent) =>
+		await BundleDownloader.Singleton.DownloadAsync(modifyList, (percent) =>
 		{
 			refreshProgressValueAction(UpdateState.Download, percent);
 		},
-		() =>
+		async () =>
 		{
-			Log.Info("[07] 下载更新资源完成");
+			UpdateLog.Info("[07] 下载更新资源完成");
 			DeleteUselessBundle(deleteList);
-			Log.Info($"[07] 删除无用资源完成：{deleteList.Count}");
+			UpdateLog.Info($"[07] 删除无用资源完成：{deleteList.Count}");
 
 			SaveMd5File();
-			SaveVersionFile();
+			await SaveVersionFile();
 			refreshProgressValueAction(UpdateState.Download, 100);
 
-			Log.Info("[10] 更新完成，进入游戏(无需重启)");
+			UpdateLog.Info("[10] 更新完成，进入游戏(无需重启)");
 			refreshProgressValueAction(UpdateState.CanEnterGame, 100);
 		});
 	}
@@ -409,7 +395,7 @@ public static class Version
 	// 删除无用资源(Bundle)
 	private static void DeleteUselessBundle(List<ResManifest.ResUnit> deleteList)
 	{
-		Log.Info("[07] 删除无用资源");
+		UpdateLog.Info("[07] 删除无用资源");
 		for (int i = 0, iMax = deleteList.Count; i < iMax; i++)
 		{
 			var item = deleteList[i];
@@ -417,7 +403,7 @@ public static class Version
 			if (File.Exists(path))
 			{
 				File.Delete(path);
-				Log.RedInfo("[Update delete] > " + item.bundleName);
+				UpdateLog.RedInfo("[Update delete] > " + item.bundleName);
 			}
 		}
 	}
@@ -436,18 +422,18 @@ public static class Version
 		if (File.Exists(md5_path)) { File.Delete(md5_path); }
 	}
 	// 将download/version.data 复制到version.data
-	private static void SaveVersionFile()
+	private static async Task SaveVersionFile()
 	{
 		try
 		{
 			File.Copy(TmpVersionFilePath, $"{Application.persistentDataPath}/{VERSIONFILENAME}", true);
 
-			VersionInfo v = GetLocalVersionInfo();
+			VersionInfo v = await GetLocalVersionInfo();
 			refreshLocalVersionAction($"{v.bigVersion}.{v.smallVersion}");
 		}
 		catch (Exception ex)
 		{
-			Log.Error(string.Format("移动 version.data 失败: {0}", ex.Message));
+			UpdateLog.Error(string.Format("移动 version.data 失败: {0}", ex.Message));
 		}
 	}
 
@@ -460,7 +446,7 @@ public static class Version
 		}
 		catch (Exception ex)
 		{
-			Log.Error(string.Format("移动 res_manifest 失败: {0}", ex.Message));
+			UpdateLog.Error(string.Format("移动 res_manifest 失败: {0}", ex.Message));
 		}
 	}
 
@@ -496,14 +482,9 @@ public static class Version
 			return $"{(length / 1073741824f):F2} GB";
 	}
 
-	private static string getFileMD5(string filePath)
+	private static async Task<string> getFileMD5(string filePath)
 	{
-		var request = UnityWebRequest.Get(filePath);
-		request.SendWebRequest();
-		while (!request.isDone) { if (request.error != null) { return null; } }
-		if (request.error != null) { return null; }
-
-		byte[] buffer = request.downloadHandler.data;
+		byte[] buffer = await readFileAllBytes(filePath);
 		if (buffer == null || buffer.Length < 1) return null;
 
 		var builder = new System.Text.StringBuilder();
@@ -513,6 +494,53 @@ public static class Version
 			builder.Append(b.ToString("x2"));
 		}
 		return builder.ToString();
+	}
+	#endregion
+
+	#region FileUtil
+	private static readonly string STREAMMING_PATH = Application.streamingAssetsPath;
+	private static readonly string PERSISTENT_PATH = Application.persistentDataPath;
+
+	private static bool isStartWith(string str, string value)
+	{
+		int aLen = str.Length;
+		int bLen = value.Length;
+
+		int ap = 0; int bp = 0;
+		while (ap < aLen && bp < bLen && str[ap] == value[bp]) { ap++; bp++; }
+
+		return (bp == bLen);
+	}
+
+	private static async Task<string> readFileAllText(string path)
+	{
+		if(Application.platform == RuntimePlatform.Android && isStartWith(path, STREAMMING_PATH))
+		{
+			UnityWebRequest request = UnityWebRequest.Get(path);
+			await request.SendWebRequest();
+			return request.downloadHandler.text;
+		}
+		return await File.ReadAllTextAsync(path);
+	}
+
+	private static async Task<byte[]> readFileAllBytes(string path)
+	{
+		if (Application.platform == RuntimePlatform.Android && isStartWith(path, STREAMMING_PATH))
+		{
+			UnityWebRequest request = UnityWebRequest.Get(path);
+			await request.SendWebRequest();
+			return request.downloadHandler.data;
+		}
+		return await File.ReadAllBytesAsync(path);
+	}
+	#endregion
+
+	#region Support await UnityWebRequestAsyncOperation
+	private static System.Runtime.CompilerServices.TaskAwaiter<object> GetAwaiter(this UnityWebRequestAsyncOperation operation)
+	{
+		var tcs = new TaskCompletionSource<object>();
+		operation.completed += (obj) => { tcs.SetResult(null); };
+		return tcs.Task.GetAwaiter();
 	}
 	#endregion
 

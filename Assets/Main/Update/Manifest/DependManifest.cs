@@ -1,4 +1,3 @@
-using NDebug;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -71,6 +70,6 @@ public static class DependManifest
 			dependManifestDict[bundleName] = deps;
 		}
 		bundle.Unload(true);
-		Log.GreenInfo($"ResMgr load bundle_manifest");
+		Debug.Log($"ResMgr load bundle_manifest");
 	}
 }

@@ -1,4 +1,3 @@
-using NDebug;
 using System.Collections.Generic;
 
 /// <summary>
@@ -39,10 +38,10 @@ public class ResManifest
 
 	public static string GetBundleMD5Name(string bundleName)
 	{
-		if (ResManifestDict == null) Log.Error("Please init first");
+		if (ResManifestDict == null) UpdateLog.Error("Please init first");
 		if (!ResManifestDict.ContainsKey(bundleName))
 		{
-			Log.Error($"找不到bundle信息：{bundleName}");
+			UpdateLog.Error($"找不到bundle信息：{bundleName}");
 			return null;
 		}
 		string md5 = ResManifestDict[bundleName].md5;

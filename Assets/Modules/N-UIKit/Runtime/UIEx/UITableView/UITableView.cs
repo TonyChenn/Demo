@@ -19,7 +19,7 @@ public abstract class UITableViewCell : MonoBehaviour
 	public abstract void UpdateCell(int index);
 }
 
-[APIInfo("N-uGUI", "UITableView", @"移植自cocos2dx中cc.TableView组件。
+[APIInfo("N-UGUI", "UITableView", @"移植自cocos2dx中cc.TableView组件。
 支持高性能大量数据展示，支持：
 1. ListView横向/竖向滚动
 2. GridView横向/竖向滚动
@@ -79,11 +79,14 @@ public class HorizontalScrollPanel : MonoBehaviour, ITableViewDelegate
 [RequireComponent(typeof(ScrollRect))]
 public class UITableView : MonoBehaviour
 {
-	public enum MoveDirection { TopToBottom, BottomToTop, LeftToRight, RightToLeft }
+	public enum MoveDirection { TopToBottom, LeftToRight }
 
-	[SerializeField] MoveDirection direction = MoveDirection.TopToBottom;
-	[SerializeField] float startOffset = 0;
-	[SerializeField] float endOffset = 0;
+	[SerializeField] MoveDirection m_MoveDirection = MoveDirection.TopToBottom;
+	[SerializeField] int m_RowOrColumCount = 2;
+
+	[SerializeField] float m_StartOffset = 0;
+	[SerializeField] float m_EndOffset = 0;
+
 	[HideInInspector] public RectTransform CachedRectTrans{ get; private set; }
 	[HideInInspector] public RectTransform CachedRectContent {  get; private set; }
 	
@@ -164,33 +167,26 @@ public class UITableView : MonoBehaviour
 		for (int i = 0; i < num; ++i)
 		{
 			Vector2 itemSize = Delegate.SizeForIndex(this, i);
-			if (direction == MoveDirection.TopToBottom) wh += itemSize.y;
-			else if (direction == MoveDirection.BottomToTop) wh += itemSize.y;
-			else if (direction == MoveDirection.LeftToRight) wh += itemSize.x;
+			if (m_MoveDirection == MoveDirection.TopToBottom) wh += itemSize.y;
+			else if (m_MoveDirection == MoveDirection.LeftToRight) wh += itemSize.x;
 		}
-		wh += startOffset;
-		wh += endOffset;
+		wh += m_StartOffset;
+		wh += m_EndOffset;
 
 		Vector2 size = CachedRectContent.sizeDelta;
-		if (direction == MoveDirection.TopToBottom) size.y = wh;
-		else if (direction == MoveDirection.BottomToTop) size.y = wh;
-		else if (direction == MoveDirection.LeftToRight) size.x = wh;
+		if (m_MoveDirection == MoveDirection.TopToBottom) size.y = wh;
+		else if (m_MoveDirection == MoveDirection.LeftToRight) size.x = wh;
 
 		CachedRectContent.sizeDelta = size;
 
 		float xy = 0;
 		float maxXY = 0;
-		if (direction == MoveDirection.TopToBottom)
+		if (m_MoveDirection == MoveDirection.TopToBottom)
 		{
 			xy = CachedRectContent.anchoredPosition.y;
 			maxXY = CachedRectContent.sizeDelta.y - CachedRectTrans.sizeDelta.y;
 		}
-		else if (direction == MoveDirection.BottomToTop)
-		{
-			xy = CachedRectContent.anchoredPosition.y;
-			maxXY = CachedRectContent.sizeDelta.y - CachedRectTrans.sizeDelta.y;
-		}
-		else if (direction == MoveDirection.LeftToRight)
+		else if (m_MoveDirection == MoveDirection.LeftToRight)
 		{
 			xy = CachedRectContent.anchoredPosition.x;
 			maxXY = CachedRectContent.sizeDelta.x - CachedRectTrans.sizeDelta.x;
@@ -206,9 +202,8 @@ public class UITableView : MonoBehaviour
 			Vector2 posFrom = Vector2.zero;
 			int from = indexFromOffset(offsetY, ref posFrom);
 			int to = 0;
-			if (direction == MoveDirection.TopToBottom) to = indexFromOffset(offsetY + CachedRectTrans.sizeDelta.y, ref posTo);
-			else if (direction == MoveDirection.BottomToTop) to = indexFromOffset(offsetY + CachedRectTrans.sizeDelta.y, ref posTo);
-			else if (direction == MoveDirection.LeftToRight) to = indexFromOffset(offsetY + CachedRectTrans.sizeDelta.x, ref posTo);
+			if (m_MoveDirection == MoveDirection.TopToBottom) to = indexFromOffset(offsetY + CachedRectTrans.sizeDelta.y, ref posTo);
+			else if (m_MoveDirection == MoveDirection.LeftToRight) to = indexFromOffset(offsetY + CachedRectTrans.sizeDelta.x, ref posTo);
 
 			removeUnvisibleCells(from, to);
 			showVisibleCells(from, to, posFrom);
@@ -227,20 +222,9 @@ public class UITableView : MonoBehaviour
 
 		float wh = 0;
 
-		switch (direction)
+		switch (m_MoveDirection)
 		{
 			case MoveDirection.TopToBottom:
-				pos.y = 0;
-				for (int i = 0; i < num; i++)
-				{
-					pos.y = -wh;
-					Vector2 size = Delegate.SizeForIndex(this, i);
-					wh += size.y;
-					if (wh > offset) return i;
-				}
-				pos.y = -wh;
-				break;
-			case MoveDirection.BottomToTop:
 				pos.y = 0;
 				for (int i = 0; i < num; i++)
 				{
@@ -334,9 +318,8 @@ public class UITableView : MonoBehaviour
 		if (usedCells.Count == 0 && from != -1 && to != -1)
 		{
 			float xy = 0;
-			if (direction == MoveDirection.TopToBottom) xy = pos.y - startOffset;
-			else if (direction == MoveDirection.BottomToTop) xy = pos.y - startOffset;
-			else if (direction == MoveDirection.LeftToRight) xy = pos.x + startOffset;
+			if (m_MoveDirection == MoveDirection.TopToBottom) xy = pos.y - m_StartOffset;
+			else if (m_MoveDirection == MoveDirection.LeftToRight) xy = pos.x + m_StartOffset;
 
 			for (int i = from; i <= to; ++i)
 			{
@@ -346,17 +329,12 @@ public class UITableView : MonoBehaviour
 					insertCellAtIndex(cell, i);
 					Vector2 size = Delegate.SizeForIndex(this, i);
 
-					if (direction == MoveDirection.TopToBottom)
+					if (m_MoveDirection == MoveDirection.TopToBottom)
 					{
 						cell.RectTrans.anchoredPosition = new Vector2(0, xy);
 						xy -= size.y;
 					}
-					else if (direction == MoveDirection.BottomToTop)
-					{
-						cell.RectTrans.anchoredPosition = new Vector2(0, xy);
-						xy -= size.y;
-					}
-					else if (direction == MoveDirection.LeftToRight)
+					else if (m_MoveDirection == MoveDirection.LeftToRight)
 					{
 						cell.RectTrans.anchoredPosition = new Vector2(xy, 0);
 						xy += size.x;
@@ -372,9 +350,8 @@ public class UITableView : MonoBehaviour
 			int begin = _cell.Index;
 
 			float xy = 0;
-			if (direction == MoveDirection.TopToBottom) xy = _cell.RectTrans.anchoredPosition.y;
-			else if (direction == MoveDirection.BottomToTop) xy = _cell.RectTrans.anchoredPosition.y;
-			else if (direction == MoveDirection.LeftToRight) xy = _cell.RectTrans.anchoredPosition.x;
+			if (m_MoveDirection == MoveDirection.TopToBottom) xy = _cell.RectTrans.anchoredPosition.y;
+			else if (m_MoveDirection == MoveDirection.LeftToRight) xy = _cell.RectTrans.anchoredPosition.x;
 
 			for (int i = begin - 1; i >= from; --i)
 			{
@@ -383,17 +360,12 @@ public class UITableView : MonoBehaviour
 				{
 					insertCellAtIndex(cell, i);
 					Vector2 size = Delegate.SizeForIndex(this, i);
-					if (direction == MoveDirection.TopToBottom)
+					if (m_MoveDirection == MoveDirection.TopToBottom)
 					{
 						xy += size.y;
 						cell.RectTrans.anchoredPosition = new Vector2(0, xy);
 					}
-					else if (direction == MoveDirection.BottomToTop)
-					{
-						xy += size.y;
-						cell.RectTrans.anchoredPosition = new Vector2(0, xy);
-					}
-					else if (direction == MoveDirection.LeftToRight)
+					else if (m_MoveDirection == MoveDirection.LeftToRight)
 					{
 						xy -= size.x;
 						cell.RectTrans.anchoredPosition = new Vector2(xy, 0);
@@ -408,17 +380,12 @@ public class UITableView : MonoBehaviour
 			Vector2 size = Delegate.SizeForIndex(this, end);
 
 			float xy = 0;
-			if (direction == MoveDirection.TopToBottom)
+			if (m_MoveDirection == MoveDirection.TopToBottom)
 			{
 				xy = _cell.RectTrans.anchoredPosition.y;
 				xy -= size.y;
 			}
-			else if (direction == MoveDirection.BottomToTop)
-			{
-				xy = _cell.RectTrans.anchoredPosition.y;
-				xy -= size.y;
-			}
-			else if (direction == MoveDirection.LeftToRight)
+			else if (m_MoveDirection == MoveDirection.LeftToRight)
 			{
 				xy = _cell.RectTrans.anchoredPosition.x;
 				xy += size.x;
@@ -432,17 +399,12 @@ public class UITableView : MonoBehaviour
 					insertCellAtIndex(cell, i);
 					Vector2 cellSize = Delegate.SizeForIndex(this, end);
 
-					if (direction == MoveDirection.TopToBottom)
+					if (m_MoveDirection == MoveDirection.TopToBottom)
 					{
 						cell.RectTrans.anchoredPosition = new Vector2(0, xy);
 						xy -= size.y;
 					}
-					if (direction == MoveDirection.BottomToTop)
-					{
-						cell.RectTrans.anchoredPosition = new Vector2(0, xy);
-						xy -= size.y;
-					}
-					else if (direction == MoveDirection.LeftToRight)
+					else if (m_MoveDirection == MoveDirection.LeftToRight)
 					{
 						cell.RectTrans.anchoredPosition = new Vector2(xy, 0);
 						xy += size.x;
@@ -518,15 +480,11 @@ public class UITableView : MonoBehaviour
 		{
 			float x = 0;
 			float y = 0;
-			if (direction == MoveDirection.TopToBottom)
+			if (m_MoveDirection == MoveDirection.TopToBottom)
 			{
 				x = CachedRectContent.sizeDelta.x - CachedRectTrans.sizeDelta.x;
 			}
-			else if (direction == MoveDirection.BottomToTop)
-			{
-				x = CachedRectContent.sizeDelta.x - CachedRectTrans.sizeDelta.x;
-			}
-			else if (direction == MoveDirection.LeftToRight)
+			else if (m_MoveDirection == MoveDirection.LeftToRight)
 			{
 				y = CachedRectContent.sizeDelta.y - CachedRectTrans.sizeDelta.y;
 			}
@@ -537,13 +495,11 @@ public class UITableView : MonoBehaviour
 				for (int i = 0; i < num; ++i)
 				{
 					Vector2 size = Delegate.SizeForIndex(this, i);
-					if (direction == MoveDirection.TopToBottom) y += size.y;
-					else if (direction == MoveDirection.BottomToTop) y += size.y;
-					else if (direction == MoveDirection.LeftToRight) x += size.x;
+					if (m_MoveDirection == MoveDirection.TopToBottom) y += size.y;
+					else if (m_MoveDirection == MoveDirection.LeftToRight) x += size.x;
 				}
-				if (direction == MoveDirection.TopToBottom) y -= CachedRectTrans.sizeDelta.y;
-				else if (direction == MoveDirection.BottomToTop) y -= CachedRectTrans.sizeDelta.y;
-				else if (direction == MoveDirection.LeftToRight) x -= CachedRectTrans.sizeDelta.x;
+				if (m_MoveDirection == MoveDirection.TopToBottom) y -= CachedRectTrans.sizeDelta.y;
+				else if (m_MoveDirection == MoveDirection.LeftToRight) x -= CachedRectTrans.sizeDelta.x;
 
 			}
 			return new Vector2(x, y);
@@ -561,17 +517,12 @@ public class UITableView : MonoBehaviour
 	{
 		float xy = 0;
 		float maxXY = 0;
-		if (direction == MoveDirection.TopToBottom)
+		if (m_MoveDirection == MoveDirection.TopToBottom)
 		{
 			xy = CachedRectContent.anchoredPosition.y;
 			maxXY = CachedRectContent.sizeDelta.y - CachedRectTrans.sizeDelta.y;
 		}
-		else if (direction == MoveDirection.BottomToTop)
-		{
-			xy = CachedRectContent.anchoredPosition.y;
-			maxXY = CachedRectContent.sizeDelta.y - CachedRectTrans.sizeDelta.y;
-		}
-		else if (direction == MoveDirection.LeftToRight)
+		else if (m_MoveDirection == MoveDirection.LeftToRight)
 		{
 			xy = -CachedRectContent.anchoredPosition.x;
 			maxXY = CachedRectContent.sizeDelta.x - CachedRectTrans.sizeDelta.x;
@@ -588,9 +539,8 @@ public class UITableView : MonoBehaviour
 			int from = indexFromOffset(offsetY, ref posFrom);
 
 			int to = 0;
-			if (direction == MoveDirection.TopToBottom) to = indexFromOffset(offsetY + CachedRectTrans.sizeDelta.y, ref posTo);
-			else if (direction == MoveDirection.BottomToTop) to = indexFromOffset(offsetY + CachedRectTrans.sizeDelta.y, ref posTo);
-			else if (direction == MoveDirection.LeftToRight) to = indexFromOffset(offsetY + CachedRectTrans.sizeDelta.x, ref posTo);
+			if (m_MoveDirection == MoveDirection.TopToBottom) to = indexFromOffset(offsetY + CachedRectTrans.sizeDelta.y, ref posTo);
+			else if (m_MoveDirection == MoveDirection.LeftToRight) to = indexFromOffset(offsetY + CachedRectTrans.sizeDelta.x, ref posTo);
 
 			removeUnvisibleCells(from, to);
 			showVisibleCells(from, to, posFrom);
